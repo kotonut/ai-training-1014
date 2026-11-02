@@ -79,3 +79,6 @@ export function arrangeSeats<M extends Pick<LunchMember, "seat">>(
     member: members.find((m) => m.seat === seat) ?? null,
   }));
 }
+
+/** 画面に出す参加者（自分かどうかの印つき）。markMe の結果 */
+export type ViewMember = LunchMember & { isMe: boolean };

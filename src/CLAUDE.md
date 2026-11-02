@@ -72,8 +72,10 @@ App Router のガイドは `node_modules/next/dist/docs/01-app/` にある。
 
 - `app/layout.tsx` — ルートレイアウト。`lang="ja"`、書体、`metadata` を定義。props の型には Next が生成するグローバル型 `LayoutProps<"/">` を使っている。
 - `app/globals.css` — Tailwind の読み込み、`@theme` の色と書体のトークン、アニメーション（`anim-*` クラス）。
-- `app/_components/lunch-app.tsx` — トップ画面の本体（Client Component）。参加・ひとこと・人のカードなど、画面の移り変わりを `useState` で持つ。`/` と `/empty` で共通。
-- `app/_components/illustrations.tsx` — おにぎり、空席のお皿、アイコンの SVG。
+- `app/_components/lunch-app.tsx` — トップ画面の本体（Client Component）。参加・ひとこと・人のカードなど、画面の移り変わりを `useState` で持ち、下の部品を並べる。`/` と `/empty` で共通。
+- `app/_components/lunch/` — トップ画面だけで使う部品。`today-header.tsx`（日付の札と見出し）、`lunch-table.tsx`（テーブル・集合時刻と場所・席）、`member-list.tsx`（今日のメンバー）。
+- `app/_components/ui/` — どの画面でも使える部品。`Tag`（丸い札）、`Button`（`cta`・`primary`・`secondary`・`subtle`・`link`）、`BottomSheet`、`TextField`、`SpeechBubble`、`ActionBar`（下に固定するボタンの部分）、`IconBadge`。画面に札やボタンを直接書かず、これらを使う。
+- `app/_components/illustrations.tsx` — おにぎり、空席のお皿、紙吹雪、アイコンの SVG と、絵の色（`COLORS`）。
 - `app/_components/locked-screen.tsx` — `/blocked` と `/expired` の共通部分。
 - `app/_lib/dummy-data.ts` — ダミーデータ（参加者、日付、集合時刻・場所、自分の id）。参加者の型は `lib/members.ts` の `LunchMember`。本番では Firestore に置き換える。
 - `_` で始まるフォルダはルートにならない（App Router の private folder）。
