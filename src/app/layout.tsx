@@ -1,29 +1,33 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Kiwi_Maru, Zen_Kaku_Gothic_New } from "next/font/google";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
+// 見出し・数字・参加ボタンなど「画面の顔」に使う書体
+const kiwiMaru = Kiwi_Maru({
+  variable: "--font-kiwi-maru",
+  weight: ["400", "500"],
+  preload: false,
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
+// 名前・ひとこと・説明など、読みやすさを優先する書体
+const zenKaku = Zen_Kaku_Gothic_New({
+  variable: "--font-zen-kaku",
+  weight: ["400", "500", "700"],
+  preload: false,
 });
 
 export const metadata: Metadata = {
-  title: "吉田 琴乃 | 自己紹介",
-  description: "株式会社HRTheory 吉田琴乃の自己紹介ページ",
+  title: "シャッフルランチ",
+  description: "今日ランチに行きたい人が集まれる、社内向けのシャッフルランチ",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="ja"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${kiwiMaru.variable} ${zenKaku.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full bg-ground font-sans text-ink">{children}</body>
     </html>
   );
 }

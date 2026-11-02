@@ -1,26 +1,69 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/* SPEC.md 5.6「見た目」の色と書体 */
+@theme {
+  --color-ground: #f1f6f2; /* 背景（薄いミント） */
+  --color-ink: #1c2b26; /* 本文の文字 */
+  --color-brand: #2f5d50; /* 参加ボタンなど（画面でいちばん濃い色） */
+  --color-brand-deep: #1f3d35; /* テーブルの時刻 */
+  --color-table: #c9dfd1; /* テーブル */
+  --color-table-edge: #9fc2ae; /* テーブルの厚み */
+  --color-muted: #3f504a; /* 補足の文字 */
+  --color-subtle: #5e6e68; /* さらに控えめな文字 */
+  --color-line: #dde7e1; /* 区切り線 */
+  --color-field: #b7c4bf; /* 入力欄の枠 */
+  --color-leave: #8a9b95; /* 「参加をやめる」の枠 */
+
+  --font-sans: var(--font-zen-kaku), system-ui, sans-serif;
+  --font-display: var(--font-kiwi-maru), serif;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+/* SPEC.md 5.7「動き」 */
+@keyframes pop {
+  0% { transform: scale(0); }
+  60% { transform: scale(1.18); }
+  80% { transform: scale(0.94); }
+  100% { transform: scale(1); }
+}
+@keyframes bob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+@keyframes nudge {
+  0%, 86%, 100% { transform: scale(1); }
+  90% { transform: scale(1.04); }
+  94% { transform: scale(0.98); }
+}
+@keyframes wave {
+  0%, 70%, 100% { transform: rotate(0); }
+  76% { transform: rotate(-16deg); }
+  84% { transform: rotate(14deg); }
+  92% { transform: rotate(-8deg); }
+}
+@keyframes burst {
+  0% { transform: translate(0, 0) scale(1); opacity: 1; }
+  100% { transform: translate(var(--dx), var(--dy)) scale(0.3); opacity: 0; }
+}
+@keyframes rise {
+  0% { transform: translateY(16px); opacity: 0; }
+  100% { transform: translateY(0); opacity: 1; }
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+.anim-pop { animation: pop 0.55s cubic-bezier(0.3, 1.4, 0.5, 1) both; }
+.anim-bob { animation: bob 2.4s ease-in-out infinite; }
+.anim-nudge { animation: nudge 4s ease-in-out infinite; }
+.anim-wave { animation: wave 4s ease-in-out infinite; transform-origin: 70% 90%; }
+.anim-burst { animation: burst 0.8s ease-out both; }
+.anim-rise { animation: rise 0.4s ease-out both; }
+
+/* 端末で「動きを減らす」設定にしている人には、動きを止める */
+@media (prefers-reduced-motion: reduce) {
+  .anim-pop,
+  .anim-bob,
+  .anim-nudge,
+  .anim-wave,
+  .anim-burst,
+  .anim-rise {
+    animation: none;
   }
-}
-
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
 }
