@@ -87,6 +87,18 @@ describe("judgeAccess：開いたときに、どの画面を出すか", () => {
         screen: "blocked",
       });
     });
+
+    test("URL がでたらめ、ブラウザが古い合言葉 → 社内の人専用です（使えなくなりました、ではない）", () => {
+      expect(judgeAccess({ fromUrl: RANDOM, remembered: OLD, ...keys })).toEqual({
+        screen: "blocked",
+      });
+    });
+
+    test("URL が古い合言葉、ブラウザがでたらめ → この QR コードは使えなくなりました", () => {
+      expect(judgeAccess({ fromUrl: OLD, remembered: RANDOM, ...keys })).toEqual({
+        screen: "expired",
+      });
+    });
   });
 
   test("合言葉は大文字と小文字を区別する", () => {

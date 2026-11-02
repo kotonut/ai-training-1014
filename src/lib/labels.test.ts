@@ -27,6 +27,14 @@ describe("nameTag：おにぎりの下の名札", () => {
     expect(nameTag("Sakura")).toBe("Saku…");
   });
 
+  test("名字がちょうど4文字なら、「…」を付けない", () => {
+    expect(nameTag("佐々木健 太郎")).toBe("佐々木健");
+  });
+
+  test("名字がちょうど5文字なら、先頭4文字の後に「…」を付ける", () => {
+    expect(nameTag("勅使河原三 太郎")).toBe("勅使河原…");
+  });
+
   test("名字が4文字を超えるときも、先頭4文字の後に「…」を付ける", () => {
     expect(nameTag("勅使河原三郎 太郎")).toBe("勅使河原…");
   });

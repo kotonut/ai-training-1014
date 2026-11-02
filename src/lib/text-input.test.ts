@@ -74,6 +74,17 @@ describe("validateName：名前は1〜20文字", () => {
     expect(validateName(`  ${name}  `)).toEqual({ ok: true, value: name });
   });
 
+  test("途中の改行は空白1つとして数える（10文字＋改行＋10文字は21文字で不可、9文字＋改行＋10文字は20文字で通る）", () => {
+    expect(validateName(`${"あ".repeat(10)}\n${"あ".repeat(10)}`)).toEqual({
+      ok: false,
+      reason: "tooLong",
+    });
+    expect(validateName(`${"あ".repeat(9)}\n${"あ".repeat(10)}`)).toEqual({
+      ok: true,
+      value: `${"あ".repeat(9)} ${"あ".repeat(10)}`,
+    });
+  });
+
   test("絵文字も1文字として数える（20個は通り、21個は不可）", () => {
     expect(validateName("👋🏽".repeat(20))).toEqual({ ok: true, value: "👋🏽".repeat(20) });
     expect(validateName("👋🏽".repeat(21))).toEqual({ ok: false, reason: "tooLong" });
@@ -101,6 +112,10 @@ describe("validateMemo：ひとことは0〜40文字", () => {
 
   test("前後の空白（半角・全角・改行）を取り除く", () => {
     expect(validateMemo("  そばの気分　\n")).toEqual({ ok: true, value: "そばの気分" });
+  });
+
+  test("前後のタブを取り除く", () => {
+    expect(validateMemo("\tそばの気分\t")).toEqual({ ok: true, value: "そばの気分" });
   });
 
   test("途中の改行は空白1つに置き換える", () => {

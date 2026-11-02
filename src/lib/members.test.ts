@@ -103,6 +103,32 @@ describe("joinLunch：参加すると、メンバーに自分が加わる", () =
     joinLunch(dummyMembers, me);
     expect(dummyMembers).toEqual(before);
   });
+
+  test("同じ名前の人が2人いても、id が違えば両方参加でき、別々の席に入る", () => {
+    const first = { id: "tanaka1", name: "田中 さくら", memo: "", topping: "#e27d7a" };
+    const second = { id: "tanaka2", name: "田中 さくら", memo: "", topping: "#ef9f6e" };
+    const noMembers: Member[] = [];
+    const result = joinLunch(joinLunch(noMembers, first), second);
+    expect(result).toHaveLength(2);
+    expect(result.find((m) => m.id === "tanaka1")?.seat).toBe(0);
+    expect(result.find((m) => m.id === "tanaka2")?.seat).toBe(1);
+  });
+});
+
+describe("席は後から移らない（席なしの人は、席が空いても席なしのまま）", () => {
+  /** 席 0〜7 の8人と、席なしの1人（user8） */
+  const nineMembers = membersAt([0, 1, 2, 3, 4, 5, 6, 7, null]);
+
+  test("席 3 の人がやめても、席なしの人は席なしのまま", () => {
+    const result = leaveLunch(nineMembers, "user3");
+    expect(result.find((m) => m.id === "user8")?.seat).toBeNull();
+  });
+
+  test("その後に新しく参加した人が、空いた席 3 に入る", () => {
+    const result = joinLunch(leaveLunch(nineMembers, "user3"), me);
+    expect(result.find((m) => m.id === "me")?.seat).toBe(3);
+    expect(result.find((m) => m.id === "user8")?.seat).toBeNull();
+  });
 });
 
 describe("leaveLunch：参加をやめると、メンバーから自分が消える", () => {
