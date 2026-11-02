@@ -44,6 +44,12 @@ describe("validateName：名前は1〜20文字", () => {
     expect(validateName("吉田\r\n琴乃")).toEqual({ ok: true, value: "吉田 琴乃" });
   });
 
+  test("途中の改行が続いていても、まとめて空白1つにする", () => {
+    expect(validateName("吉田\n\n琴乃")).toEqual({ ok: true, value: "吉田 琴乃" });
+    expect(validateName("吉田\r\n\r\n琴乃")).toEqual({ ok: true, value: "吉田 琴乃" });
+    expect(validateName("吉田\n\r\n\r琴乃")).toEqual({ ok: true, value: "吉田 琴乃" });
+  });
+
   test("空の名前は不可", () => {
     expect(validateName("")).toEqual({ ok: false, reason: "empty" });
   });
@@ -126,6 +132,28 @@ describe("validateMemo：ひとことは0〜40文字", () => {
     expect(validateMemo("そばの気分\r\nうどんも可")).toEqual({
       ok: true,
       value: "そばの気分 うどんも可",
+    });
+  });
+
+  test("途中の改行が続いていても、まとめて空白1つにする", () => {
+    expect(validateMemo("そばの気分\n\n\nうどんも可")).toEqual({
+      ok: true,
+      value: "そばの気分 うどんも可",
+    });
+    expect(validateMemo("そばの気分\r\n\r\nうどんも可")).toEqual({
+      ok: true,
+      value: "そばの気分 うどんも可",
+    });
+  });
+
+  test("改行が続いても空白1つとして数える（19文字＋改行2つ＋20文字は40文字で通り、20文字＋改行2つ＋20文字は41文字で不可）", () => {
+    expect(validateMemo(`${"あ".repeat(20)}\n\n${"あ".repeat(20)}`)).toEqual({
+      ok: false,
+      reason: "tooLong",
+    });
+    expect(validateMemo(`${"あ".repeat(19)}\n\n${"あ".repeat(20)}`)).toEqual({
+      ok: true,
+      value: `${"あ".repeat(19)} ${"あ".repeat(20)}`,
     });
   });
 

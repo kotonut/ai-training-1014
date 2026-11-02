@@ -101,6 +101,27 @@ describe("judgeAccess：開いたときに、どの画面を出すか", () => {
     });
   });
 
+  describe("URL の合言葉が空（?key= だけ）のときは、URL に合言葉がないものとして扱う", () => {
+    test("ブラウザが今の合言葉を覚えている → 今日のランチ", () => {
+      expect(judgeAccess({ fromUrl: "", remembered: CURRENT, ...keys })).toEqual({
+        screen: "lunch",
+        remember: CURRENT,
+      });
+    });
+
+    test("ブラウザが古い合言葉を覚えている → この QR コードは使えなくなりました", () => {
+      expect(judgeAccess({ fromUrl: "", remembered: OLD, ...keys })).toEqual({
+        screen: "expired",
+      });
+    });
+
+    test("ブラウザも何も覚えていない → 社内の人専用です", () => {
+      expect(judgeAccess({ fromUrl: "", remembered: null, ...keys })).toEqual({
+        screen: "blocked",
+      });
+    });
+  });
+
   test("合言葉は大文字と小文字を区別する", () => {
     expect(judgeAccess({ fromUrl: CURRENT.toLowerCase(), remembered: null, ...keys })).toEqual({
       screen: "blocked",
