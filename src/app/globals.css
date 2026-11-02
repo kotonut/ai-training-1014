@@ -13,6 +13,28 @@
   --color-line: #dde7e1; /* 区切り線 */
   --color-field: #b7c4bf; /* 入力欄の枠 */
   --color-leave: #8a9b95; /* 「参加をやめる」の枠 */
+  --color-surface: #fff; /* 札・吹き出し・下のボタンの部分・下から出てくる画面 */
+  --color-on-brand: #fff; /* brand の上に載せる文字 */
+  --color-overlay: rgb(15 25 22 / 0.45); /* 下から出てくる画面の後ろを暗くする */
+  /* おにぎり・お皿・紙吹雪の色は app/_components/illustrations.tsx の中にある */
+
+  /* 角丸（丸い札やボタンは rounded-full） */
+  --radius-field: 10px; /* 入力欄 */
+  --radius-bubble: 14px; /* ひとことの吹き出し */
+  --radius-bubble-tail: 4px; /* 吹き出しの、おにぎり側の角 */
+  --radius-sheet: 22px; /* 下から出てくる画面の上の角 */
+
+  /* 文字の大きさは5段階 */
+  --text-caption: 13px; /* 札・名札・一覧の名前・「ひとことはまだありません」 */
+  --text-body: 15px; /* 本文・ひとこと・入力欄の見出し・小さいボタン・説明の文 */
+  --text-heading: clamp(16px, 4.9vw, 18px); /* 見出しの一文・「今日のメンバー」・入力欄・大きいボタン（狭い画面では小さく） */
+  --text-title: clamp(22px, 6.4vw, 26px); /* 見出しの人数・下から出てくる画面の見出し・社内の人専用の画面の見出し */
+  --text-display: 40px; /* テーブルの集合時刻 */
+
+  /* 影 */
+  --shadow-table: 0 7px 0 var(--color-table-edge); /* テーブルの厚み */
+  --shadow-join: 0 6px 16px color-mix(in srgb, var(--color-brand) 28%, transparent); /* 参加ボタン */
+  --shadow-bubble: 0 1px 0 var(--color-line); /* 吹き出しの下 */
 
   --font-sans: var(--font-zen-kaku), system-ui, sans-serif;
   --font-display: var(--font-kiwi-maru), serif;

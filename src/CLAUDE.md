@@ -26,6 +26,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 - パッケージを追加する前に、パッケージ名と追加する理由を伝えて確認を取る。
 - 作業が終わったら、変更したファイルを一覧にする。
+- ページのファイルは表示だけにする。判定やデータの加工などのロジックは、`lib/` に関数として置く。
 
 ## コマンド
 
@@ -74,13 +75,17 @@ App Router のガイドは `node_modules/next/dist/docs/01-app/` にある。
 - `app/_components/lunch-app.tsx` — トップ画面の本体（Client Component）。参加・ひとこと・人のカードなど、画面の移り変わりを `useState` で持つ。`/` と `/empty` で共通。
 - `app/_components/illustrations.tsx` — おにぎり、空席のお皿、アイコンの SVG。
 - `app/_components/locked-screen.tsx` — `/blocked` と `/expired` の共通部分。
-- `app/_lib/dummy-data.ts` — ダミーデータ（参加者、日付、集合時刻・場所）と `Member` 型。本番では Firestore に置き換える。
+- `app/_lib/dummy-data.ts` — ダミーデータ（参加者、日付、集合時刻・場所、自分の id）。参加者の型は `lib/members.ts` の `LunchMember`。本番では Firestore に置き換える。
 - `_` で始まるフォルダはルートにならない（App Router の private folder）。
 - インポートのエイリアスは `@/*`（プロジェクトルート基準）。
 
 ### 見た目の決まり
 
 - 色はハードコードせず、`globals.css` の `@theme` のトークン（`bg-ground`、`bg-brand`、`text-muted` など）を使う。画面でいちばん濃い色（`brand`）は参加ボタンだけに使う。
+- 色・角丸・文字の大きさ・影は、`[13px]` や `bg-white` のような値を直接書かず、`@theme` のトークン（`bg-surface`、`rounded-sheet`、`text-caption`、`shadow-join` など）を使う。トークンの名前は色や数字ではなく役割でつける。
+  - 文字の大きさは5段階（`text-caption`・`text-body`・`text-heading`・`text-title`・`text-display`）。段階を増やさず、この中から選ぶ。
+  - おにぎり・お皿・紙吹雪など絵の色は、`globals.css` ではなく `app/_components/illustrations.tsx` の `COLORS` にまとめる。
+  - 社内の人専用の画面も、ランチの画面と同じトークン（`ground`・`ink`・`muted` など）を使う。
 - 書体は2つ。`font-display`（Kiwi Maru）は見出し・数字・参加ボタンなど画面の顔になる部分だけ、それ以外は `font-sans`（Zen Kaku Gothic New）。どちらも `next/font/google` で読み込む。
 - 動きは `globals.css` の `anim-*` クラスで付ける。新しい動きを足すときは、`prefers-reduced-motion` の一覧にも加えて止まるようにする。
 - ダークモードはない（明るい画面だけ）。

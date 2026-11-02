@@ -1,4 +1,18 @@
-// 画面で使う絵（おにぎり、お皿、アイコン）
+// 画面で使う絵（おにぎり、お皿、紙吹雪、アイコン）。絵の色はこのファイルの中だけで使うので、globals.css ではなくここにまとめる
+
+import type { CSSProperties } from "react";
+
+const COLORS = {
+  rice: "#fff", // おにぎりのご飯
+  riceEdge: "#e2dbcf", // ご飯の輪郭
+  dark: "#2b3a35", // 海苔と、目・口
+  cheek: "#f3afa6", // ほっぺ
+  shadow: "rgb(0 0 0 / 0.08)", // おにぎりの足元の影
+  plate: "#fff", // お皿
+  plateEdge: "#d3ded8", // お皿の縁とお箸
+  plateInner: "#e5ece8", // お皿の内側の線
+  confetti: ["#e9b949", "#e27d7a", "#6fae92", "#ef9f6e"], // 紙吹雪
+} as const;
 
 type OnigiriProps = {
   topping: string;
@@ -14,19 +28,19 @@ export function Onigiri({ topping, size = 58, variant = "full" }: OnigiriProps) 
   const full = variant === "full";
   return (
     <svg width={size} height={size} viewBox="0 0 60 60" aria-hidden="true">
-      {full && <ellipse cx="30" cy="56" rx="16" ry="3" fill="#000" opacity="0.08" />}
-      <path d={ONIGIRI_PATH} fill="#fff" stroke="#e2dbcf" strokeWidth={full ? 2 : 3} />
+      {full && <ellipse cx="30" cy="56" rx="16" ry="3" fill={COLORS.shadow} />}
+      <path d={ONIGIRI_PATH} fill={COLORS.rice} stroke={COLORS.riceEdge} strokeWidth={full ? 2 : 3} />
       <ellipse cx="30" cy="14" rx="6" ry="4.5" fill={topping} />
-      <rect x="17" y="39" width="26" height="16" rx="3" fill="#2b3a35" />
-      <circle cx="23" cy="29" r={full ? 2.3 : 2.6} fill="#2b2b2b" />
-      <circle cx="37" cy="29" r={full ? 2.3 : 2.6} fill="#2b2b2b" />
+      <rect x="17" y="39" width="26" height="16" rx="3" fill={COLORS.dark} />
+      <circle cx="23" cy="29" r={full ? 2.3 : 2.6} fill={COLORS.dark} />
+      <circle cx="37" cy="29" r={full ? 2.3 : 2.6} fill={COLORS.dark} />
       {full && (
         <>
-          <ellipse cx="18.5" cy="34" rx="3.5" ry="2.2" fill="#f3afa6" opacity="0.75" />
-          <ellipse cx="41.5" cy="34" rx="3.5" ry="2.2" fill="#f3afa6" opacity="0.75" />
+          <ellipse cx="18.5" cy="34" rx="3.5" ry="2.2" fill={COLORS.cheek} opacity="0.75" />
+          <ellipse cx="41.5" cy="34" rx="3.5" ry="2.2" fill={COLORS.cheek} opacity="0.75" />
           <path
             d="M27 33q3 3 6 0"
-            stroke="#2b2b2b"
+            stroke={COLORS.dark}
             strokeWidth="1.8"
             fill="none"
             strokeLinecap="round"
@@ -41,11 +55,11 @@ export function Onigiri({ topping, size = 58, variant = "full" }: OnigiriProps) 
 export function EmptyPlate() {
   return (
     <svg width="48" height="48" viewBox="0 0 60 60" fill="none" aria-hidden="true">
-      <ellipse cx="28" cy="34" rx="22" ry="14" fill="#fff" stroke="#d3ded8" strokeWidth="2" />
-      <ellipse cx="28" cy="34" rx="13" ry="7.5" stroke="#e5ece8" strokeWidth="2" />
+      <ellipse cx="28" cy="34" rx="22" ry="14" fill={COLORS.plate} stroke={COLORS.plateEdge} strokeWidth="2" />
+      <ellipse cx="28" cy="34" rx="13" ry="7.5" stroke={COLORS.plateInner} strokeWidth="2" />
       <path
         d="M50 12l6 30M45 13l6 30"
-        stroke="#d3ded8"
+        stroke={COLORS.plateEdge}
         strokeWidth="2.5"
         strokeLinecap="round"
       />
@@ -113,5 +127,37 @@ export function LockIcon() {
       <rect x="5" y="11" width="14" height="10" rx="2" />
       <path d="M8 11V8a4 4 0 0 1 8 0v3" />
     </svg>
+  );
+}
+
+/** 参加したときの紙吹雪。x, y は弾ける中心 */
+export function Burst({ x, y }: { x: number; y: number }) {
+  const [c1, c2, c3, c4] = COLORS.confetti;
+  const dots = [
+    { dx: 0, dy: -46, color: c1, size: 8 },
+    { dx: 40, dy: -24, color: c2, size: 7 },
+    { dx: 40, dy: 24, color: c3, size: 8 },
+    { dx: 0, dy: 46, color: c4, size: 7 },
+    { dx: -40, dy: 24, color: c1, size: 8 },
+    { dx: -40, dy: -24, color: c2, size: 7 },
+  ];
+  return (
+    <span aria-hidden="true" className="absolute h-0 w-0" style={{ left: x, top: y }}>
+      {dots.map((d, i) => (
+        <span
+          key={i}
+          className="anim-burst absolute rounded-full"
+          style={
+            {
+              width: d.size,
+              height: d.size,
+              background: d.color,
+              "--dx": `${d.dx}px`,
+              "--dy": `${d.dy}px`,
+            } as CSSProperties
+          }
+        />
+      ))}
+    </span>
   );
 }

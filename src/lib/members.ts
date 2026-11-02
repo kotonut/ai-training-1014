@@ -53,3 +53,29 @@ export function summarizeTable(members: readonly Pick<LunchMember, "seat">[]): {
   const seated = members.filter((m) => m.seat !== null).length;
   return { total: members.length, seated, others: members.length - seated };
 }
+
+/** id で参加者を探す。いなければ undefined */
+export function findMember<M extends Pick<LunchMember, "id">>(
+  members: readonly M[],
+  id: string,
+): M | undefined {
+  return members.find((m) => m.id === id);
+}
+
+/** 参加者に「自分かどうか」の印を付ける。もとの配列は書き換えない */
+export function markMe<M extends Pick<LunchMember, "id">>(
+  members: readonly M[],
+  userId: string,
+): (M & { isMe: boolean })[] {
+  return members.map((m) => ({ ...m, isMe: m.id === userId }));
+}
+
+/** テーブルの8席に人を並べる。席番号の順で、空いている席は member が null */
+export function arrangeSeats<M extends Pick<LunchMember, "seat">>(
+  members: readonly M[],
+): { seat: number; member: M | null }[] {
+  return Array.from({ length: SEAT_COUNT }, (_, seat) => ({
+    seat,
+    member: members.find((m) => m.seat === seat) ?? null,
+  }));
+}

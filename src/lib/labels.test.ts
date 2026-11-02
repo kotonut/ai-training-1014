@@ -1,5 +1,13 @@
 import { describe, expect, test } from "vitest";
-import { memoButtonLabel, memoText, nameTag } from "@/lib/labels";
+import {
+  memberListName,
+  memoButtonLabel,
+  memoText,
+  nameTag,
+  personMemoText,
+  seatAriaLabel,
+  seatLabel,
+} from "@/lib/labels";
 
 // SPEC.md 5.1「テーブル」「今日のメンバー」「下のボタンの部分」
 
@@ -62,5 +70,46 @@ describe("memoText：今日のメンバーの一覧に出す、ひとこと", ()
 
   test("ひとことがある人 → そのまま出す", () => {
     expect(memoText("そばの気分。営業部です")).toBe("そばの気分。営業部です");
+  });
+});
+
+describe("personMemoText：人のカードに出す、ひとこと", () => {
+  test("ひとことがない人 →「ひとことはありません」", () => {
+    expect(personMemoText("")).toBe("ひとことはありません");
+  });
+
+  test("ひとことがある人 → そのまま出す", () => {
+    expect(personMemoText("そばの気分")).toBe("そばの気分");
+  });
+});
+
+describe("seatLabel：おにぎりの下の札", () => {
+  test("自分 →「あなた」", () => {
+    expect(seatLabel("吉田 琴乃", true)).toBe("あなた");
+  });
+
+  test("ほかの人 → 名札（名字、4文字まで）", () => {
+    expect(seatLabel("田中 さくら", false)).toBe("田中");
+    expect(seatLabel("田中さくら", false)).toBe("田中さく…");
+  });
+});
+
+describe("seatAriaLabel：おにぎりの読み上げ", () => {
+  test("自分 →「あなた。タップしてひとことを書く」", () => {
+    expect(seatAriaLabel("吉田 琴乃", true)).toBe("あなた。タップしてひとことを書く");
+  });
+
+  test("ほかの人 →「◯◯さん。タップしてひとことを見る」（名前は省略しない）", () => {
+    expect(seatAriaLabel("田中 さくら", false)).toBe("田中 さくらさん。タップしてひとことを見る");
+  });
+});
+
+describe("memberListName：今日のメンバーの一覧に出す名前", () => {
+  test("自分 → 名前に「（あなた）」を付ける", () => {
+    expect(memberListName("吉田 琴乃", true)).toBe("吉田 琴乃（あなた）");
+  });
+
+  test("ほかの人 → 名前をそのまま出す", () => {
+    expect(memberListName("田中 さくら", false)).toBe("田中 さくら");
   });
 });

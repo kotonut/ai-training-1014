@@ -1,28 +1,22 @@
 // 画面のたたき台用のダミーデータ。本番では Firestore から読み込む。
 
-export type Member = {
-  id: string;
-  name: string;
-  memo: string;
-  /** おにぎりの具の色 */
-  topping: string;
-  /** テーブルの席の番号（0〜7） */
-  seat: number;
-};
+import type { LunchMember } from "@/lib/members";
 
-export const TODAY_LABEL = "11月2日（月）";
+/** 今日の日付（日本時間、「2026-11-02」の形）。本番では lib/date.ts の toDateKey で今の時刻から作る */
+export const TODAY_KEY = "2026-11-02";
 
 export const MEETING = {
   time: "12:00",
   place: "1階エントランス",
 };
 
-export const SEAT_COUNT = 8;
+/** 自分の id。本番では匿名認証の id を使う */
+export const MY_ID = "me";
 
 /** 自分のおにぎりの具の色 */
 export const MY_TOPPING = "#6fae92";
 
-export const DUMMY_MEMBERS: Member[] = [
+export const DUMMY_MEMBERS: LunchMember[] = [
   {
     id: "tanaka",
     name: "田中 さくら",

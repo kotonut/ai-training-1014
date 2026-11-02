@@ -24,3 +24,23 @@ export function memoButtonLabel(memo: string): string {
 export function memoText(memo: string): string {
   return memo === "" ? "ひとことはまだありません" : memo;
 }
+
+/** 人のカード（5.4）に出す、ひとこと */
+export function personMemoText(memo: string): string {
+  return memo === "" ? "ひとことはありません" : memo;
+}
+
+/** おにぎりの下の札。自分は「あなた」、ほかの人は名札 */
+export function seatLabel(name: string, isMe: boolean): string {
+  return isMe ? "あなた" : nameTag(name);
+}
+
+/** おにぎりの読み上げ（8章：読み上げ） */
+export function seatAriaLabel(name: string, isMe: boolean): string {
+  return isMe ? "あなた。タップしてひとことを書く" : `${name}さん。タップしてひとことを見る`;
+}
+
+/** 今日のメンバーの一覧に出す名前。自分は「（あなた）」を付ける */
+export function memberListName(name: string, isMe: boolean): string {
+  return isMe ? `${name}（あなた）` : name;
+}

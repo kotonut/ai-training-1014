@@ -1,5 +1,13 @@
 import { describe, expect, test } from "vitest";
-import { assignSeat, joinLunch, leaveLunch, summarizeTable } from "@/lib/members";
+import {
+  arrangeSeats,
+  assignSeat,
+  findMember,
+  joinLunch,
+  leaveLunch,
+  markMe,
+  summarizeTable,
+} from "@/lib/members";
 
 // SPEC.md 6.3「席の決め方」・8.1「基本の流れ」・8.3「参加と席のルール」
 
@@ -166,5 +174,53 @@ describe("summarizeTable：人数をそろえる（見出し・一覧・テー�
     const { total, seated, others } = summarizeTable(members);
     expect(seated + others).toBe(total);
     expect(total).toBe(11);
+  });
+});
+
+describe("findMember：id で参加者を探す", () => {
+  test("いる人 → その人", () => {
+    expect(findMember(dummyMembers, "sato")?.name).toBe("佐藤 健");
+  });
+
+  test("いない人 → undefined", () => {
+    expect(findMember(dummyMembers, "nobody")).toBeUndefined();
+  });
+});
+
+describe("markMe：自分かどうかの印を付ける", () => {
+  test("自分だけ isMe が true になる", () => {
+    expect(markMe(dummyMembers, "sato").map((m) => m.isMe)).toEqual([false, true, false]);
+  });
+
+  test("自分がいなければ、全員 false", () => {
+    expect(markMe(dummyMembers, "me").every((m) => !m.isMe)).toBe(true);
+  });
+
+  test("もとの配列は書き換えない", () => {
+    const before = structuredClone(dummyMembers);
+    markMe(dummyMembers, "sato");
+    expect(dummyMembers).toEqual(before);
+  });
+});
+
+describe("arrangeSeats：テーブルの8席に人を並べる", () => {
+  test("いつも8席を、席番号の順に返す", () => {
+    expect(arrangeSeats([]).map((s) => s.seat)).toEqual([0, 1, 2, 3, 4, 5, 6, 7]);
+  });
+
+  test("誰もいなければ、全部空いている", () => {
+    expect(arrangeSeats([]).every((s) => s.member === null)).toBe(true);
+  });
+
+  test("ダミーの3人は、席 0・3・5 に座る", () => {
+    const ids = arrangeSeats(dummyMembers).map((s) => s.member?.id ?? null);
+    expect(ids).toEqual(["tanaka", null, null, "sato", null, "suzuki", null, null]);
+  });
+
+  test("席なしの人はテーブルに並ばない", () => {
+    const members = membersAt([0, 1, 2, 3, 4, 5, 6, 7, null]);
+    const seated = arrangeSeats(members).filter((s) => s.member !== null);
+    expect(seated).toHaveLength(8);
+    expect(seated.some((s) => s.member?.seat === null)).toBe(false);
   });
 });
