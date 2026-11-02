@@ -24,6 +24,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## 作業の約束
 
+- 回答は必ず日本語で書く。
 - パッケージを追加する前に、パッケージ名と追加する理由を伝えて確認を取る。
 - 作業が終わったら、変更したファイルを一覧にする。
 - ページのファイルは表示だけにする。判定やデータの加工などのロジックは、`lib/` に関数として置く。
