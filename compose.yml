@@ -4,8 +4,8 @@ services:
       context: .
     tty: true
     volumes:
-      # Next.js のコードはパソコン側の src/ に置く
-      - ./src:/app
+      # プロジェクトのフォルダ全体を見せる（.git も見えるようにする）
+      - .:/app
     environment:
       # Windows で保存が画面に反映されないとき用（npm run dev -- --webpack と組み合わせる）
       - WATCHPACK_POLLING=true

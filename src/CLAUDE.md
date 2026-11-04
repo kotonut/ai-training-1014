@@ -20,7 +20,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 - Docker コンテナの中で動いている。
 - 開発サーバーは別のターミナルで起動済み。`npm run dev` は実行しない。
-- git は人がパソコン側で使う。git のコマンドは実行しない。
+- git と gh はコンテナの中で使える。
 
 ## 作業の約束
 
@@ -28,6 +28,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - パッケージを追加する前に、パッケージ名と追加する理由を伝えて確認を取る。
 - 作業が終わったら、変更したファイルを一覧にする。
 - ページのファイルは表示だけにする。判定やデータの加工などのロジックは、`lib/` に関数として置く。
+- コミットとプッシュは、頼まれたときだけ
+- コミットの前に、対象のファイルとメッセージを見せる
+- コミットメッセージは日本語で書く
 
 ## コマンド
 
