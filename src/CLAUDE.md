@@ -10,7 +10,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 - 仕様は `SPEC.md`（受け入れ条件は 8章）。画面デザインの経緯は `DESIGN_HISTORY.md`。
 - 画面案（採用したのは「A案 After」）：https://claude.ai/artifact/NaBQC1yUqib22NfCQeRzf7
-- 今の段階は**画面のたたき台**。見た目と画面の移り変わりだけで、データはダミー。Firebase（匿名認証・Firestore）、合言葉の判定、入力のルールはまだ作っていない。
+- 今の段階は**画面のたたき台**。見た目と画面の移り変わりだけで、データはダミー。Firebase（Google ログイン・Firestore）、社内の人かどうかの判定、入力のルールはまだ作っていない。
+- ログインは会社の Google アカウント（Google Workspace）。社内の人かどうかは「メールが確認済みで会社のドメイン」で決め、守りは Firestore のセキュリティルールに置く（`SPEC.md` 6.1）。合言葉はやめた。
 
 - Next.js 16.4.3 / React 19.3.0 / TypeScript（strict）
 - Tailwind CSS v4
@@ -69,8 +70,8 @@ App Router のガイドは `node_modules/next/dist/docs/01-app/` にある。
 | --- | --- |
 | `/` | 今日のランチ（トップ）。`app/page.tsx` |
 | `/empty` | 確認用：まだ誰もいない日 |
-| `/blocked` | 社内の人専用です（合言葉なしで開いたとき） |
-| `/expired` | この QR コードは使えなくなりました（古い合言葉で開いたとき） |
+| `/blocked` | 社内の人専用です（合言葉の仕様のときの画面。`SPEC.md` 5.5 の「ログインしていない」画面に作り直す予定） |
+| `/expired` | この QR コードは使えなくなりました（合言葉の仕様のときの画面。合言葉をやめたので不要。5.5 の「会社以外のアカウント」「アプリの中のブラウザ」の画面に置き換える予定） |
 
 ### ファイル
 
