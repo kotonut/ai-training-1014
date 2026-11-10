@@ -1,6 +1,7 @@
 // 画面で使う絵（おにぎり、お皿、紙吹雪、アイコン）。絵の色はこのファイルの中だけで使うので、globals.css ではなくここにまとめる
 
 import type { CSSProperties } from "react";
+import type { Topping } from "@/lib/members";
 
 const COLORS = {
   rice: "#fff", // おにぎりのご飯
@@ -12,10 +13,12 @@ const COLORS = {
   plateEdge: "#d3ded8", // お皿の縁とお箸
   plateInner: "#e5ece8", // お皿の内側の線
   confetti: ["#e9b949", "#e27d7a", "#6fae92", "#ef9f6e"], // 紙吹雪
+  // おにぎりの具（くすませて強さをそろえる）。自分（mine）は落ち着いた緑
+  topping: { ume: "#e27d7a", sake: "#ef9f6e", tamago: "#e9b949", mine: "#6fae92" },
 } as const;
 
 type OnigiriProps = {
-  topping: string;
+  topping: Topping;
   size?: number;
   /** "full" は顔（ほっぺ・口）と影つき。"simple" は一覧用の小さい絵 */
   variant?: "full" | "simple";
@@ -30,7 +33,7 @@ export function Onigiri({ topping, size = 58, variant = "full" }: OnigiriProps) 
     <svg width={size} height={size} viewBox="0 0 60 60" aria-hidden="true">
       {full && <ellipse cx="30" cy="56" rx="16" ry="3" fill={COLORS.shadow} />}
       <path d={ONIGIRI_PATH} fill={COLORS.rice} stroke={COLORS.riceEdge} strokeWidth={full ? 2 : 3} />
-      <ellipse cx="30" cy="14" rx="6" ry="4.5" fill={topping} />
+      <ellipse cx="30" cy="14" rx="6" ry="4.5" fill={COLORS.topping[topping]} />
       <rect x="17" y="39" width="26" height="16" rx="3" fill={COLORS.dark} />
       <circle cx="23" cy="29" r={full ? 2.3 : 2.6} fill={COLORS.dark} />
       <circle cx="37" cy="29" r={full ? 2.3 : 2.6} fill={COLORS.dark} />
