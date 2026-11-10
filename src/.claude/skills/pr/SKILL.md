@@ -71,7 +71,7 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
 
 ## 影響範囲
 
-- （影響する画面：`/`・`/empty`・`/blocked`・`/expired` など）
+- （影響する画面：`/`・`/blocked`・`/expired` など）
 - （`app/_components/ui/` の共通部品を変えたときは、その部品を使っているほかの画面への影響も書く）
 
 ## 確認したこと

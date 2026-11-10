@@ -11,20 +11,23 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // 会社のドメイン。.env.local の NEXT_PUBLIC_COMPANY_DOMAIN と同じ値にする。
-    // TODO: 会社のドメインに書き換えてから公開する（このままでは誰も使えない）
+    // 会社のドメイン。ルールは .env.local を読めないので、ここに直接書く。
+    // .env.local の NEXT_PUBLIC_COMPANY_DOMAIN と必ず同じ値にすること。
+    // ずれると、画面ではログインできるのに、データが読めなくなる。
     function companyDomain() {
       return 'hrtheory.co.jp';
     }
 
     // ---- 共通 ----
 
-    // 社内の人：ログインしていて、メールが確認済みで、ドメインが会社のものと完全に一致する
+    // 社内の人：ログインしていて、メールが確認済みで、ドメインが会社のものと完全に一致する。
+    // lib/account.ts の isCompanyAccount() と同じ決め方（@ がちょうど1つ、@ の前が空でない）
     function isCompanyUser() {
       return request.auth != null
         && request.auth.token.email_verified == true
         && request.auth.token.email is string
         && request.auth.token.email.lower().split('@').size() == 2
+        && request.auth.token.email.lower().split('@')[0].size() > 0
         && request.auth.token.email.lower().split('@')[1] == companyDomain();
     }
 

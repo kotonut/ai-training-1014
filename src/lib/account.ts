@@ -37,12 +37,13 @@ export function getCompanyDomain(): string {
 /**
  * 社内の人かどうか。メールが確認済みで、ドメインが会社のものと完全に一致するとき true。
  * サブドメイン（sub.example.co.jp）や、似た名前のドメイン（example.co.jp.evil.com）は社内とみなさない。
+ * firestore.rules の isCompanyUser() と同じ決め方にする（@ がちょうど1つ、@ の前が空でない）。
+ * ずれると、画面は開くのにデータが読めない、ということが起きる。
  */
 export function isCompanyAccount(account: AccountInfo, companyDomain: string): boolean {
   if (!account.emailVerified || !account.email) return false;
-  const at = account.email.lastIndexOf("@");
-  if (at <= 0) return false;
-  return account.email.slice(at + 1).toLowerCase() === companyDomain.toLowerCase();
+  const parts = account.email.toLowerCase().split("@");
+  return parts.length === 2 && parts[0] !== "" && parts[1] === companyDomain.toLowerCase();
 }
 
 /**

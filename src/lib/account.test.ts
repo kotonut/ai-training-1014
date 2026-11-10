@@ -43,12 +43,13 @@ describe("isCompanyAccount", () => {
     expect(isCompanyAccount({ email: "hanako@gmail.com", emailVerified: true }, DOMAIN)).toBe(false);
   });
 
-  it("サブドメインや、似た名前のドメインは社内ではない", () => {
+  it("サブドメイン・似た名前のドメイン・@ が2つあるアドレスは社内ではない", () => {
     for (const email of [
       "hanako@sub.example.co.jp",
       "hanako@example.co.jp.evil.com",
       "hanako@notexample.co.jp",
       "example.co.jp@gmail.com",
+      "a@b@example.co.jp",
     ]) {
       expect(isCompanyAccount({ email, emailVerified: true }, DOMAIN)).toBe(false);
     }

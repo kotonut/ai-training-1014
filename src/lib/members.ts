@@ -51,21 +51,6 @@ export function assignSeat(
   return null;
 }
 
-/** 参加する。すでに参加していればメンバーは変えない。もとの配列は書き換えない */
-export function joinLunch<M extends LunchMember>(
-  members: readonly M[],
-  me: Omit<M, "seat">,
-): M[] {
-  const seat = assignSeat(members, me.id);
-  if (seat === "alreadyJoined") return [...members];
-  return [...members, { ...me, seat } as M];
-}
-
-/** 参加をやめる。もとの配列は書き換えない */
-export function leaveLunch<M extends LunchMember>(members: readonly M[], userId: string): M[] {
-  return members.filter((m) => m.id !== userId);
-}
-
 /** 全体の人数・席にいる人数・席なし（「ほかに◯人」）の人数 */
 export function summarizeTable(members: readonly Pick<LunchMember, "seat">[]): {
   total: number;

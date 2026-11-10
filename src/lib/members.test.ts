@@ -4,8 +4,6 @@ import {
   displayTopping,
   assignSeat,
   findMember,
-  joinLunch,
-  leaveLunch,
   markMe,
   pickTopping,
   summarizeTable,
@@ -84,77 +82,17 @@ describe("assignSeat：参加する人の席を決める", () => {
   });
 });
 
-describe("joinLunch：参加すると、メンバーに自分が加わる", () => {
-  test("ダミーの3人に自分が加わって4人になり、自分は 1 番の席に入る", () => {
-    const result = joinLunch(dummyMembers, me);
-    expect(result).toHaveLength(4);
-    expect(result.find((m) => m.id === "me")).toEqual({ ...me, seat: 1 });
+describe("assignSeat：同じ名前の人・席なしの人", () => {
+  test("同じ名前の人が2人いても、id が違えば別々の席に入る", () => {
+    const first: Member = { id: "tanaka1", name: "田中 さくら", memo: "", topping: "ume", seat: 0 };
+    expect(assignSeat([first], "tanaka2")).toBe(1);
   });
 
-  test("もとのメンバーの席は変わらない", () => {
-    const result = joinLunch(dummyMembers, me);
-    for (const m of dummyMembers) {
-      expect(result.find((r) => r.id === m.id)).toEqual(m);
-    }
-  });
-
-  test("8席すべて埋まっていても、席なしで参加できる", () => {
-    const result = joinLunch(membersAt([0, 1, 2, 3, 4, 5, 6, 7]), me);
-    expect(result).toHaveLength(9);
-    expect(result.find((m) => m.id === "me")?.seat).toBeNull();
-  });
-
-  test("すでに参加している人がもう一度参加しても、メンバーは変わらない", () => {
-    const members = [...dummyMembers, { ...me, seat: 1 }];
-    expect(joinLunch(members, me)).toEqual(members);
-  });
-
-  test("もとの配列は書き換えない", () => {
-    const before = structuredClone(dummyMembers);
-    joinLunch(dummyMembers, me);
-    expect(dummyMembers).toEqual(before);
-  });
-
-  test("同じ名前の人が2人いても、id が違えば両方参加でき、別々の席に入る", () => {
-    const first: Omit<Member, "seat"> = { id: "tanaka1", name: "田中 さくら", memo: "", topping: "ume" };
-    const second: Omit<Member, "seat"> = { id: "tanaka2", name: "田中 さくら", memo: "", topping: "sake" };
-    const noMembers: Member[] = [];
-    const result = joinLunch(joinLunch(noMembers, first), second);
-    expect(result).toHaveLength(2);
-    expect(result.find((m) => m.id === "tanaka1")?.seat).toBe(0);
-    expect(result.find((m) => m.id === "tanaka2")?.seat).toBe(1);
-  });
-});
-
-describe("席は後から移らない（席なしの人は、席が空いても席なしのまま）", () => {
-  /** 席 0〜7 の8人と、席なしの1人（user8） */
-  const nineMembers = membersAt([0, 1, 2, 3, 4, 5, 6, 7, null]);
-
-  test("席 3 の人がやめても、席なしの人は席なしのまま", () => {
-    const result = leaveLunch(nineMembers, "user3");
-    expect(result.find((m) => m.id === "user8")?.seat).toBeNull();
-  });
-
-  test("その後に新しく参加した人が、空いた席 3 に入る", () => {
-    const result = joinLunch(leaveLunch(nineMembers, "user3"), me);
-    expect(result.find((m) => m.id === "me")?.seat).toBe(3);
-    expect(result.find((m) => m.id === "user8")?.seat).toBeNull();
-  });
-});
-
-describe("leaveLunch：参加をやめると、メンバーから自分が消える", () => {
-  test("4人から自分が消えて3人に戻る", () => {
-    const members = [...dummyMembers, { ...me, seat: 1 }];
-    expect(leaveLunch(members, "me")).toEqual(dummyMembers);
-  });
-
-  test("参加していない人がやめても、メンバーは変わらない", () => {
-    expect(leaveLunch(dummyMembers, "me")).toEqual(dummyMembers);
-  });
-
-  test("ほかの人は消えない", () => {
-    const result = leaveLunch(dummyMembers, "sato");
-    expect(result.map((m) => m.id)).toEqual(["tanaka", "suzuki"]);
+  test("席 3 の人がやめた後に参加した人は、空いた席 3 に入る（席なしの人は移らない）", () => {
+    // 席 0〜7 の8人と席なしの1人（user8）から、席 3 の人（user3）がやめた
+    const members = membersAt([0, 1, 2, 3, 4, 5, 6, 7, null]).filter((m) => m.id !== "user3");
+    expect(assignSeat(members, "me")).toBe(3);
+    expect(members.find((m) => m.id === "user8")?.seat).toBeNull();
   });
 });
 

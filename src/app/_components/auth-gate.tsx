@@ -3,6 +3,7 @@
 import { createContext, use, useEffect, useState } from "react";
 import { decideAuthScreen, getCompanyDomain, signInErrorMessage } from "@/lib/account";
 import { signInWithGoogle, watchSignedInUser, type SignedInUser } from "@/lib/auth";
+import { findSetupProblem } from "@/lib/setup";
 import { LockedScreen } from "./locked-screen";
 import { Button } from "./ui/button";
 
@@ -18,22 +19,41 @@ export function useSignedInUser(): SignedInUser {
   return user;
 }
 
+// 設定（.env.local）に足りないものがあるか。値はビルドのときに決まるので、1回だけ確かめる
+const SETUP_PROBLEM = findSetupProblem();
+
 export function AuthGate({ children }: { children: React.ReactNode }) {
   // undefined：確かめている途中、null：ログインしていない
   const [user, setUser] = useState<SignedInUser | null | undefined>(undefined);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => watchSignedInUser(setUser), []);
+  useEffect(() => {
+    if (SETUP_PROBLEM) {
+      // 足りない設定の名前は開発する人向けなので、画面ではなくコンソールに出す
+      console.error(SETUP_PROBLEM);
+      return;
+    }
+    return watchSignedInUser(setUser);
+  }, []);
 
-  const screen = user === undefined ? "checking" : decideAuthScreen(user, getCompanyDomain());
-
-  // ポップアップがブロックされないよう、押したらすぐ呼ぶ
+  // ポップアップがブロックされないよう、押したらすぐ呼ぶ（signInWithGoogle は失敗しても例外を投げない）
   const signIn = () => {
     setError(null);
-    signInWithGoogle().then((result) => {
+    void signInWithGoogle().then((result) => {
       if (!result.ok) setError(signInErrorMessage(result.code));
     });
   };
+
+  if (SETUP_PROBLEM) {
+    return (
+      <LockedScreen
+        title={"いまは\n使えません"}
+        message="アプリの設定に足りないものがあります。アプリを管理している人に知らせてください。"
+      />
+    );
+  }
+
+  const screen = user === undefined ? "checking" : decideAuthScreen(user, getCompanyDomain());
 
   if (screen === "lunch" && user) {
     return <SignedInUserContext value={user}>{children}</SignedInUserContext>;

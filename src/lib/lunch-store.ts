@@ -7,7 +7,6 @@
 //   lunches/{日付}/seats/{0〜7}             その席にいる人のアカウントID（席が重ならないようにするため）
 // メールアドレスは保存しない。
 
-import { FirebaseError } from "firebase/app";
 import {
   collection,
   doc,
@@ -113,9 +112,4 @@ export async function leaveToday(dateKey: string, userId: string): Promise<void>
 /** ひとことを保存する */
 export async function saveMemo(dateKey: string, userId: string, memo: string): Promise<void> {
   await updateDoc(memberRef(dateKey, userId), { memo });
-}
-
-/** Firebase のエラーコード（"unavailable" など）。Firebase のエラーでなければ undefined */
-export function errorCode(error: unknown): string | undefined {
-  return error instanceof FirebaseError ? error.code : undefined;
 }

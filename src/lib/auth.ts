@@ -1,7 +1,6 @@
 // Google ログイン（SPEC.md 6.1）。Firebase Authentication を使うコードはここにまとめる。
 // ブラウザでだけ呼ぶ（Client Component の useEffect やボタンの onClick から）。
 
-import { FirebaseError } from "firebase/app";
 import {
   GoogleAuthProvider,
   onAuthStateChanged,
@@ -9,7 +8,7 @@ import {
   type Unsubscribe,
 } from "firebase/auth";
 import { getCompanyDomain, type AccountInfo } from "@/lib/account";
-import { getFirebaseAuth } from "@/lib/firebase";
+import { errorCode, getFirebaseAuth } from "@/lib/firebase";
 
 /** ログインしている人。メールは判定にだけ使い、保存も表示もしない（SPEC.md 6.2） */
 export type SignedInUser = AccountInfo & {
@@ -47,14 +46,16 @@ export type SignInResult = { ok: true } | { ok: false; code: string };
  *
  * 会社のドメインのアカウントを候補に出し（hd）、毎回アカウントを選べるようにする。
  * hd は案内のためで、守りにはならない。
+ * 失敗しても例外は投げず、結果で返す（設定の間違いで準備に失敗したときも含む）。
  */
 export async function signInWithGoogle(): Promise<SignInResult> {
-  const provider = new GoogleAuthProvider();
-  provider.setCustomParameters({ hd: getCompanyDomain(), prompt: "select_account" });
   try {
+    const provider = new GoogleAuthProvider();
+    provider.setCustomParameters({ hd: getCompanyDomain(), prompt: "select_account" });
     await signInWithPopup(getFirebaseAuth(), provider);
     return { ok: true };
   } catch (error) {
-    return { ok: false, code: error instanceof FirebaseError ? error.code : "unknown" };
+    console.error("Google でログインできませんでした", error);
+    return { ok: false, code: errorCode(error) ?? "unknown" };
   }
 }

@@ -83,7 +83,8 @@ App Router のガイドは `node_modules/next/dist/docs/01-app/` にある。
 - `app/_components/illustrations.tsx` — おにぎり、空席のお皿、紙吹雪、アイコンの SVG と、絵の色（`COLORS`）。
 - `app/_components/locked-screen.tsx` — 社内の人専用の画面の共通部分（ログインの画面、`/blocked`、`/expired`）。
 - `app/_lib/meeting.ts` — 集合時刻と場所（毎日同じ）。
-- `lib/firebase.ts`・`lib/firebase-config.ts` — Firebase の初期化。接続情報は `.env.local` の `NEXT_PUBLIC_FIREBASE_*` から読む。
+- `lib/firebase.ts`・`lib/firebase-config.ts` — Firebase の初期化と、エラーコードの取り出し（`errorCode`）。接続情報は `.env.local` の `NEXT_PUBLIC_FIREBASE_*` から読む。
+- `lib/setup.ts` — `.env.local` の設定がそろっているかを確かめる。足りなければ `AuthGate` が「いまは使えません」を出す（足りない名前はコンソールに出す）。
 - `lib/account.ts` — 社内の人かどうかと、開いたときに出す画面の判定（画面の切り替えだけに使う）。会社のドメインは `.env.local` の `NEXT_PUBLIC_COMPANY_DOMAIN`。
 - `lib/auth.ts` — Google ログイン（ポップアップ方式）。
 - `lib/lunch-store.ts` — Firestore の読み書き（参加者の待ち受け・参加・参加をやめる・ひとこと・保存した名前）。Firebase を使うコードは `lib/` のこれらのファイルにだけ置く。

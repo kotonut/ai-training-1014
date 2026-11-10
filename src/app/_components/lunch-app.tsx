@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { MEETING } from "@/app/_lib/meeting";
 import { hasDateChanged, toDateKey } from "@/lib/date";
+import { errorCode } from "@/lib/firebase";
 import {
   inputErrorMessage,
   lunchErrorMessage,
@@ -11,7 +12,6 @@ import {
   type LunchAction,
 } from "@/lib/labels";
 import {
-  errorCode,
   joinToday,
   leaveToday,
   loadSavedName,
@@ -52,14 +52,18 @@ export function LunchApp() {
   const [snapshot, setSnapshot] = useState<{ dateKey: string; members: LunchMember[] } | null>(
     null,
   );
-  const [loadError, setLoadError] = useState<string | null>(null);
+  // 読み込みの失敗も、どの日のものかを一緒に持つ（日付が変わったら前の日の失敗は出さない）
+  const [loadFailure, setLoadFailure] = useState<{ dateKey: string; message: string } | null>(null);
   // undefined：読み込み中、null：まだ一度も参加していない
   const [savedName, setSavedName] = useState<string | null | undefined>(undefined);
+  // 参加する・参加をやめるの保存中（ひとことの保存は待たないので含めない）
   const [busy, setBusy] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
   const [sheet, setSheet] = useState<Sheet>(null);
   const [draftName, setDraftName] = useState("");
   const [draftMemo, setDraftMemo] = useState("");
+  // ひとことの保存を続けてしたとき、いちばん新しい保存の失敗だけを出すための番号
+  const memoSaveId = useRef(0);
 
   // 画面を開いたまま日付が変わったら、新しい日に切り替える（SPEC.md 8.2）
   useEffect(() => {
@@ -69,16 +73,19 @@ export function LunchApp() {
     return () => clearInterval(id);
   }, []);
 
-  // その日の参加者を待ち受ける（リアルタイム更新）
+  // その日の参加者を待ち受ける（リアルタイム更新）。
+  // 通信が切れているあいだは Firestore が自分でつなぎ直す。onError が呼ばれるのは
+  // 権限がないときなど待ち受けが止まったときなので、再読み込みを案内する。
   useEffect(
     () =>
       watchMembers(
         dateKey,
         (members) => {
           setSnapshot({ dateKey, members });
-          setLoadError(null);
+          setLoadFailure(null);
         },
-        (error) => setLoadError(lunchErrorMessage("load", errorCode(error))),
+        (error) =>
+          setLoadFailure({ dateKey, message: lunchErrorMessage("load", errorCode(error)) }),
       ),
     [dateKey],
   );
@@ -97,6 +104,7 @@ export function LunchApp() {
   }, [user.uid]);
 
   const loaded = snapshot?.dateKey === dateKey ? snapshot.members : null;
+  const loadError = loadFailure?.dateKey === dateKey ? loadFailure.message : null;
   if (loaded === null) {
     return (
       <main aria-busy={!loadError} className="flex h-dvh items-center justify-center bg-ground px-8">
@@ -120,7 +128,10 @@ export function LunchApp() {
   const viewedMember =
     sheet?.type === "person" ? findMember(members, sheet.memberId) : undefined;
 
-  /** 保存する。失敗したらそのことを出し、false を返す（画面は保存されたデータのまま） */
+  /**
+   * 参加する・参加をやめるを保存する。終わるまで、ほかの操作のボタンを押せなくする。
+   * 失敗したらそのことを出し、false を返す（画面は保存されたデータのまま）。
+   */
   const save = async (action: LunchAction, task: () => Promise<void>): Promise<boolean> => {
     setBusy(true);
     setActionError(null);
@@ -135,61 +146,67 @@ export function LunchApp() {
     }
   };
 
-  const join = (name: string, memo: string) =>
-    save("join", () => joinToday({ dateKey, userId: user.uid, name, memo }));
+  const openJoinSheet = () => {
+    // 初回は名前の欄に Google アカウントの名前を入れておく
+    setDraftName(user.displayName ?? "");
+    setDraftMemo("");
+    setSheet({ type: "join" });
+  };
 
   // 画面の移り変わり
-  const pressJoin = async () => {
-    let name = savedName;
-    if (name === undefined) {
-      // 名前の読み込みが終わっていなければ、ここで読みに行く。読めなければ失敗を出して止める
-      setBusy(true);
-      setActionError(null);
-      try {
-        name = await loadSavedName(user.uid);
-        setSavedName(name);
-      } catch (error) {
-        setActionError(lunchErrorMessage("join", errorCode(error)));
-        return;
-      } finally {
-        setBusy(false);
+  const pressJoin = () => {
+    if (savedName === null) {
+      openJoinSheet();
+      return;
+    }
+    // 名前の読み込みと参加を1つの保存にまとめ、そのあいだボタンを押せなくする
+    void save("join", async () => {
+      // 名前の読み込みが終わっていなければ、ここで読みに行く
+      const name = savedName ?? (await loadSavedName(user.uid));
+      setSavedName(name);
+      if (name) {
+        // 2回目からは押すだけで参加する。ひとことはその日だけなので空から始める
+        await joinToday({ dateKey, userId: user.uid, name, memo: "" });
+      } else {
+        openJoinSheet();
       }
-    }
-    if (name) {
-      // 2回目からは押すだけで参加する。ひとことはその日だけなので空から始める
-      void join(name, "");
-    } else {
-      // 初回は名前の欄に Google アカウントの名前を入れておく
-      setDraftName(user.displayName ?? "");
-      setDraftMemo("");
-      setSheet({ type: "join" });
-    }
+    });
   };
   const submitJoin = async () => {
     if (!nameCheck.ok || !memoCheck.ok) return;
-    if (await join(nameCheck.value, memoCheck.value)) {
-      setSavedName(nameCheck.value);
+    const name = nameCheck.value;
+    const memo = memoCheck.value;
+    if (await save("join", () => joinToday({ dateKey, userId: user.uid, name, memo }))) {
+      setSavedName(name);
       setSheet(null);
     }
   };
   const openMemo = () => {
+    // 参加する・参加をやめるの保存中は開かない（やめた後にひとことを保存して失敗しないように）
+    if (busy) return;
     setDraftMemo(myMemo);
     setSheet({ type: "memo" });
   };
   const submitMemo = () => {
     if (!memoCheck.ok) return;
-    // 通信が切れていても画面にはすぐ出る。保存に失敗したら、もとのひとことに戻ってそのことを出す
+    // 画面にはすぐ出る（通信が切れていても）。保存の終わりは待たないので、ほかのボタンは押せたまま。
+    // 保存に失敗したら、もとのひとことに戻ってそのことを出す（続けて保存したときは、いちばん新しいものだけ）
+    const id = ++memoSaveId.current;
     setSheet(null);
-    void save("memo", () => saveMemo(dateKey, user.uid, memoCheck.value));
+    setActionError(null);
+    saveMemo(dateKey, user.uid, memoCheck.value).catch((error: unknown) => {
+      if (id === memoSaveId.current) setActionError(lunchErrorMessage("memo", errorCode(error)));
+    });
   };
   const selectMember = (member: ViewMember) =>
     member.isMe ? openMemo() : setSheet({ type: "person", memberId: member.id });
   const leave = () => void save("leave", () => leaveToday(dateKey, user.uid));
   const closeSheet = () => setSheet(null);
 
-  const errorText = actionError && (
+  // 待ち受けが止まったときは、表示が古いままなので、そのことを出す
+  const errorText = (actionError || loadError) && (
     <p role="alert" className="text-center text-caption leading-relaxed text-muted">
-      {actionError}
+      {actionError ?? loadError}
     </p>
   );
 
@@ -206,7 +223,7 @@ export function LunchApp() {
               参加しました！ {MEETING.time} に {MEETING.place}へ
             </p>
             <div className="flex gap-2">
-              <Button variant="secondary" onClick={openMemo} className="flex-1">
+              <Button variant="secondary" onClick={openMemo} disabled={busy} className="flex-1">
                 {memoButtonLabel(myMemo)}
               </Button>
               <Button variant="subtle" onClick={leave} disabled={busy} className="flex-1">
