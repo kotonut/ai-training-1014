@@ -1,0 +1,128 @@
+rules_version = '2';
+
+// シャッフルランチの Firestore セキュリティルール（SPEC.md 6.1・6.2・6.3・7章）
+//
+// - 読み書きできるのは、メールが確認済みで会社のドメインの Google アカウントでログインした人だけ。
+// - 自分の参加・名前は自分しか作れない・変えられない・消せない。
+// - 席は seats/{0〜7} の文書を「作る」ことで取る。すでにある文書は作れないので、同じ席に2人は入れない。
+// - メールアドレスは保存させない（決まった項目しか書けない）。
+// - ここに書いていない場所・操作は、すべて拒否される。
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // 会社のドメイン。.env.local の NEXT_PUBLIC_COMPANY_DOMAIN と同じ値にする。
+    // TODO: 会社のドメインに書き換えてから公開する（このままでは誰も使えない）
+    function companyDomain() {
+      return 'hrtheory.co.jp';
+    }
+
+    // ---- 共通 ----
+
+    // 社内の人：ログインしていて、メールが確認済みで、ドメインが会社のものと完全に一致する
+    function isCompanyUser() {
+      return request.auth != null
+        && request.auth.token.email_verified == true
+        && request.auth.token.email is string
+        && request.auth.token.email.lower().split('@').size() == 2
+        && request.auth.token.email.lower().split('@')[1] == companyDomain();
+    }
+
+    function isSelf(uid) {
+      return request.auth.uid == uid;
+    }
+
+    // 日付（日本時間、「2026-11-02」の形）
+    function isDateKey(date) {
+      return date.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$');
+    }
+
+    // 名前とひとことの文字数は画面で確かめる（名前 1〜20文字、ひとこと 0〜40文字。絵文字の組み合わせも1文字）。
+    // ここでは数え方が画面と違うので、大きすぎるデータだけを防ぐ。
+    function isName(value) {
+      return value is string && value.trim().size() > 0 && value.size() <= 100;
+    }
+
+    function isMemo(value) {
+      return value is string && value.size() <= 200;
+    }
+
+    function memberPath(date, uid) {
+      return /databases/$(database)/documents/lunches/$(date)/members/$(uid);
+    }
+
+    function seatPath(date, seat) {
+      return /databases/$(database)/documents/lunches/$(date)/seats/$(string(seat));
+    }
+
+    // 新しく参加するときの中身。席があるなら、同じ書き込みでその席を自分のものにしていること
+    function isNewMember(date, uid, data) {
+      return data.keys().hasOnly(['name', 'memo', 'seat', 'topping', 'joinedAt'])
+        && data.keys().hasAll(['name', 'memo', 'seat', 'topping', 'joinedAt'])
+        && isName(data.name)
+        && isMemo(data.memo)
+        && data.topping in ['ume', 'sake', 'tamago']
+        && data.joinedAt == request.time
+        && (data.seat == null
+          || (data.seat is int
+            && data.seat >= 0
+            && data.seat < 8
+            && getAfter(seatPath(date, data.seat)).data.uid == uid));
+    }
+
+    // ---- users/{アカウントID}：名前（次の参加から使う）----
+
+    match /users/{uid} {
+      allow read: if isCompanyUser() && isSelf(uid);
+      allow create, update: if isCompanyUser()
+        && isSelf(uid)
+        && request.resource.data.keys().hasOnly(['name'])
+        && isName(request.resource.data.name);
+    }
+
+    // ---- lunches/{日付}：その日のランチ ----
+
+    match /lunches/{date} {
+
+      // 参加者：名前・ひとこと・席の番号・具・参加した時刻
+      match /members/{uid} {
+        allow read: if isCompanyUser();
+
+        allow create: if isCompanyUser()
+          && isSelf(uid)
+          && isDateKey(date)
+          && isNewMember(date, uid, request.resource.data);
+
+        // 参加した後に変えられるのは、ひとことだけ
+        allow update: if isCompanyUser()
+          && isSelf(uid)
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['memo'])
+          && isMemo(request.resource.data.memo);
+
+        // 参加をやめるときは、同じ書き込みで席も空ける
+        allow delete: if isCompanyUser()
+          && isSelf(uid)
+          && (resource.data.seat == null || !existsAfter(seatPath(date, resource.data.seat)));
+      }
+
+      // 席（0〜7）：その席にいる人のアカウントID
+      match /seats/{seat} {
+        allow read: if isCompanyUser();
+
+        // 作れるのは自分の席だけ。同じ書き込みで、その席番号で参加していること。
+        // update は許していないので、人の席を上書きすることはできない
+        allow create: if isCompanyUser()
+          && isDateKey(date)
+          && seat.matches('^[0-7]$')
+          && request.resource.data.keys().hasOnly(['uid'])
+          && request.resource.data.uid == request.auth.uid
+          && getAfter(memberPath(date, request.auth.uid)).data.seat == int(seat);
+
+        // 空けられるのは自分の席だけ。同じ書き込みで、参加もやめていること
+        allow delete: if isCompanyUser()
+          && resource.data.uid == request.auth.uid
+          && !existsAfter(memberPath(date, request.auth.uid));
+      }
+    }
+  }
+}

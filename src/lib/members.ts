@@ -2,13 +2,35 @@
 
 export const SEAT_COUNT = 8;
 
+/** 保存するおにぎりの具（梅・鮭・卵）。色そのものは illustrations.tsx の COLORS で決める */
+export const TOPPINGS = ["ume", "sake", "tamago"] as const;
+export type StoredTopping = (typeof TOPPINGS)[number];
+
+/** 画面に出す具。自分は落ち着いた緑の "mine" で出す（SPEC.md 5.6） */
+export type Topping = StoredTopping | "mine";
+
+/**
+ * その人の具を決める。アカウント ID から決めるので、同じ人は毎日同じ具になる。
+ * （SPEC.md 9章「おにぎりの具の色の決め方」の仮の考え：自動で割り振る）
+ */
+export function pickTopping(userId: string): StoredTopping {
+  let sum = 0;
+  for (const ch of userId) sum = (sum + ch.charCodeAt(0)) % TOPPINGS.length;
+  return TOPPINGS[sum];
+}
+
+/** 画面に出す具。自分は "mine" */
+export function displayTopping(member: Pick<LunchMember, "topping">, isMe: boolean): Topping {
+  return isMe ? "mine" : member.topping;
+}
+
 /** 参加者のデータ。席なし（9人目から）は seat が null */
 export type LunchMember = {
   id: string;
   name: string;
   memo: string;
-  /** おにぎりの具の色 */
-  topping: string;
+  /** おにぎりの具 */
+  topping: StoredTopping;
   /** テーブルの席の番号（0〜7）。席なしは null */
   seat: number | null;
 };

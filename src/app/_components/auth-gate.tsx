@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { createContext, use, useEffect, useState } from "react";
 import { decideAuthScreen, getCompanyDomain, signInErrorMessage } from "@/lib/account";
 import { signInWithGoogle, watchSignedInUser, type SignedInUser } from "@/lib/auth";
 import { LockedScreen } from "./locked-screen";
@@ -8,6 +8,15 @@ import { Button } from "./ui/button";
 
 // ログインの関所（SPEC.md 5.5・6.1）。会社のアカウントでログインしたときだけ children を出す。
 // それまでは参加者の名前・ひとこと・人数を一切出さない。
+
+const SignedInUserContext = createContext<SignedInUser | null>(null);
+
+/** ログインしている人。AuthGate の中でだけ使える */
+export function useSignedInUser(): SignedInUser {
+  const user = use(SignedInUserContext);
+  if (!user) throw new Error("useSignedInUser は AuthGate の中で使ってください");
+  return user;
+}
 
 export function AuthGate({ children }: { children: React.ReactNode }) {
   // undefined：確かめている途中、null：ログインしていない
@@ -26,7 +35,9 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
     });
   };
 
-  if (screen === "lunch") return children;
+  if (screen === "lunch" && user) {
+    return <SignedInUserContext value={user}>{children}</SignedInUserContext>;
+  }
 
   if (screen === "checking") {
     // ログイン済みの人に、一瞬ログインの画面が見えないように何も出さない

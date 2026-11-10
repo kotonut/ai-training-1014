@@ -10,7 +10,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 - 仕様は `SPEC.md`（受け入れ条件は 8章）。画面デザインの経緯は `DESIGN_HISTORY.md`。
 - 画面案（採用したのは「A案 After」）：https://claude.ai/artifact/NaBQC1yUqib22NfCQeRzf7
-- 今の段階は**画面のたたき台**。見た目と画面の移り変わりだけで、データはダミー。Firebase（Google ログイン・Firestore）、社内の人かどうかの判定、入力のルールはまだ作っていない。
+- 今の段階は**作っている途中**（イシュー #1）。Google ログインと、Firestore への保存・読み込み・リアルタイム更新はできた。アプリの中のブラウザの画面、`/blocked`・`/expired` の整理はまだ。
 - ログインは会社の Google アカウント（Google Workspace）。社内の人かどうかは「メールが確認済みで会社のドメイン」で決め、守りは Firestore のセキュリティルールに置く（`SPEC.md` 6.1）。合言葉はやめた。
 
 - Next.js 16.4.3 / React 19.3.0 / TypeScript（strict）
@@ -68,8 +68,7 @@ App Router のガイドは `node_modules/next/dist/docs/01-app/` にある。
 
 | パス | 画面 |
 | --- | --- |
-| `/` | 今日のランチ（トップ）。`app/page.tsx` |
-| `/empty` | 確認用：まだ誰もいない日 |
+| `/` | 今日のランチ（トップ）。`app/page.tsx`。会社のアカウントでログインするまでは、ログインの画面を出す |
 | `/blocked` | 社内の人専用です（合言葉の仕様のときの画面。`SPEC.md` 5.5 の「ログインしていない」画面に作り直す予定） |
 | `/expired` | この QR コードは使えなくなりました（合言葉の仕様のときの画面。合言葉をやめたので不要。5.5 の「会社以外のアカウント」「アプリの中のブラウザ」の画面に置き換える予定） |
 
@@ -77,12 +76,20 @@ App Router のガイドは `node_modules/next/dist/docs/01-app/` にある。
 
 - `app/layout.tsx` — ルートレイアウト。`lang="ja"`、書体、`metadata` を定義。props の型には Next が生成するグローバル型 `LayoutProps<"/">` を使っている。
 - `app/globals.css` — Tailwind の読み込み、`@theme` の色と書体のトークン、アニメーション（`anim-*` クラス）。
-- `app/_components/lunch-app.tsx` — トップ画面の本体（Client Component）。参加・ひとこと・人のカードなど、画面の移り変わりを `useState` で持ち、下の部品を並べる。`/` と `/empty` で共通。
+- `app/_components/auth-gate.tsx` — ログインの関所（Client Component）。会社のアカウントでログインしたときだけ中身を出し、それ以外は 5.5 の画面を出す。ログインしている人は `useSignedInUser()` で取り出す。
+- `app/_components/lunch-app.tsx` — トップ画面の本体（Client Component）。Firestore の参加者を待ち受け、参加・参加をやめる・ひとことを `lib/lunch-store.ts` で保存する。下から出てくる画面の移り変わりを `useState` で持ち、下の部品を並べる。
 - `app/_components/lunch/` — トップ画面だけで使う部品。`today-header.tsx`（日付の札と見出し）、`lunch-table.tsx`（テーブル・集合時刻と場所・席）、`member-list.tsx`（今日のメンバー）。
 - `app/_components/ui/` — どの画面でも使える部品。`Tag`（丸い札）、`Button`（`cta`・`primary`・`secondary`・`subtle`・`link`）、`BottomSheet`、`TextField`、`SpeechBubble`、`ActionBar`（下に固定するボタンの部分）、`IconBadge`。画面に札やボタンを直接書かず、これらを使う。
 - `app/_components/illustrations.tsx` — おにぎり、空席のお皿、紙吹雪、アイコンの SVG と、絵の色（`COLORS`）。
-- `app/_components/locked-screen.tsx` — `/blocked` と `/expired` の共通部分。
-- `app/_lib/dummy-data.ts` — ダミーデータ（参加者、日付、集合時刻・場所、自分の id）。参加者の型は `lib/members.ts` の `LunchMember`。本番では Firestore に置き換える。
+- `app/_components/locked-screen.tsx` — 社内の人専用の画面の共通部分（ログインの画面、`/blocked`、`/expired`）。
+- `app/_lib/meeting.ts` — 集合時刻と場所（毎日同じ）。
+- `lib/firebase.ts`・`lib/firebase-config.ts` — Firebase の初期化。接続情報は `.env.local` の `NEXT_PUBLIC_FIREBASE_*` から読む。
+- `lib/account.ts` — 社内の人かどうかと、開いたときに出す画面の判定（画面の切り替えだけに使う）。会社のドメインは `.env.local` の `NEXT_PUBLIC_COMPANY_DOMAIN`。
+- `lib/auth.ts` — Google ログイン（ポップアップ方式）。
+- `lib/lunch-store.ts` — Firestore の読み書き（参加者の待ち受け・参加・参加をやめる・ひとこと・保存した名前）。Firebase を使うコードは `lib/` のこれらのファイルにだけ置く。
+- `lib/lunch-docs.ts` — Firestore から読んだ文書を画面で使う形にする（Firebase には触らない）。
+- `firestore.rules` — Firestore のセキュリティルール。守りの本体。会社のドメインは `companyDomain()` に直接書く。
+- 参加者の型は `lib/members.ts` の `LunchMember`。おにぎりの具は色ではなく名前（`ume`・`sake`・`tamago`）で保存し、色は `illustrations.tsx` の `COLORS.topping` で決める。
 - `_` で始まるフォルダはルートにならない（App Router の private folder）。
 - インポートのエイリアスは `@/*`（プロジェクトルート基準）。
 
