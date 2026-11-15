@@ -1,5 +1,7 @@
 import { describe, expect, test } from "vitest";
 import {
+  inputErrorMessage,
+  lunchErrorMessage,
   memberListName,
   memoButtonLabel,
   memoText,
@@ -111,5 +113,44 @@ describe("memberListName：今日のメンバーの一覧に出す名前", () =>
 
   test("ほかの人 → 名前をそのまま出す", () => {
     expect(memberListName("田中 さくら", false)).toBe("田中 さくら");
+  });
+});
+
+describe("lunchErrorMessage：読み書きに失敗したときの文", () => {
+  test("操作ごとに、失敗したことを伝える", () => {
+    expect(lunchErrorMessage("join")).toBe("参加できませんでした。もう一度お試しください");
+    expect(lunchErrorMessage("leave")).toBe("参加をやめられませんでした。もう一度お試しください");
+    expect(lunchErrorMessage("memo", "permission-denied")).toBe(
+      "ひとことを保存できませんでした。もう一度お試しください",
+    );
+  });
+
+  test("通信が切れているときは、接続できないと伝える", () => {
+    expect(lunchErrorMessage("join", "unavailable")).toBe(
+      "接続できません。電波のよい場所でもう一度お試しください",
+    );
+  });
+});
+
+describe("inputErrorMessage：入力欄の下に出す、押せない理由", () => {
+  test("問題がなければ何も出さない", () => {
+    expect(inputErrorMessage("name", { ok: true, value: "田中" })).toBeNull();
+    expect(inputErrorMessage("memo", { ok: true, value: "" })).toBeNull();
+  });
+
+  test("名前が空なら、入れるよう伝える", () => {
+    expect(inputErrorMessage("name", { ok: false, reason: "empty" })).toBe("名前を入れてください");
+  });
+
+  test("名前が長すぎたら、20文字までと伝える", () => {
+    expect(inputErrorMessage("name", { ok: false, reason: "tooLong" })).toBe(
+      "名前は20文字までにしてください",
+    );
+  });
+
+  test("ひとことが長すぎたら、40文字までと伝える", () => {
+    expect(inputErrorMessage("memo", { ok: false, reason: "tooLong" })).toBe(
+      "ひとことは40文字までにしてください",
+    );
   });
 });

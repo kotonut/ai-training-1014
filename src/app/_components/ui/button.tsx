@@ -4,7 +4,7 @@ type ButtonProps = {
   /**
    * cta：参加ボタン（画面でいちばん目立つ。brand の塗りはこれと primary だけ）
    * primary：下から出てくる画面の決定ボタン
-   * secondary：緑の枠のボタン（ひとことを書く）
+   * secondary：梅色の枠のボタン（ひとことを書く）
    * subtle：灰色の枠のボタン（参加をやめる）
    * link：下線の文字だけのボタン（閉じる）
    */

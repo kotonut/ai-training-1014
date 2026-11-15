@@ -1,6 +1,11 @@
 // SPEC.md 5.1「テーブル」「今日のメンバー」「下のボタンの部分」
 
-import { splitCharacters } from "@/lib/text-input";
+import {
+  MEMO_MAX_LENGTH,
+  NAME_MAX_LENGTH,
+  splitCharacters,
+  type ValidationResult,
+} from "@/lib/text-input";
 
 const NAME_TAG_MAX = 4;
 
@@ -43,4 +48,37 @@ export function seatAriaLabel(name: string, isMe: boolean): string {
 /** 今日のメンバーの一覧に出す名前。自分は「（あなた）」を付ける */
 export function memberListName(name: string, isMe: boolean): string {
   return isMe ? `${name}（あなた）` : name;
+}
+
+/** 失敗した操作（SPEC.md 8.7） */
+export type LunchAction = "load" | "join" | "leave" | "memo";
+
+const ACTION_FAILED: Record<LunchAction, string> = {
+  load: "今日のメンバーを読み込めませんでした。再読み込みしてください",
+  join: "参加できませんでした。もう一度お試しください",
+  leave: "参加をやめられませんでした。もう一度お試しください",
+  memo: "ひとことを保存できませんでした。もう一度お試しください",
+};
+
+/**
+ * 読み書きに失敗したときに出す文。code は Firebase のエラーコード（わからなければ undefined）。
+ * 通信が切れているとき（unavailable）は、操作にかかわらず接続できないことを伝える。
+ */
+export function lunchErrorMessage(action: LunchAction, code?: string): string {
+  if (code === "unavailable") return "接続できません。電波のよい場所でもう一度お試しください";
+  return ACTION_FAILED[action];
+}
+
+/**
+ * 入力欄の下に出す、押せない理由（SPEC.md 8.4）。問題がなければ null。
+ * 名前が空のときも出す（Google アカウントに名前がないと、空のまま入力画面が出るため）。
+ */
+export function inputErrorMessage(field: "name" | "memo", result: ValidationResult): string | null {
+  if (result.ok) return null;
+  if (field === "name") {
+    return result.reason === "empty"
+      ? "名前を入れてください"
+      : `名前は${NAME_MAX_LENGTH}文字までにしてください`;
+  }
+  return `ひとことは${MEMO_MAX_LENGTH}文字までにしてください`;
 }

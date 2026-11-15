@@ -1,12 +1,13 @@
 import { describe, expect, test } from "vitest";
 import {
   arrangeSeats,
+  displayTopping,
   assignSeat,
   findMember,
-  joinLunch,
-  leaveLunch,
   markMe,
+  pickTopping,
   summarizeTable,
+  type StoredTopping,
 } from "@/lib/members";
 
 // SPEC.md 6.3「席の決め方」・8.1「基本の流れ」・8.3「参加と席のルール」
@@ -16,15 +17,15 @@ type Member = {
   id: string;
   name: string;
   memo: string;
-  topping: string;
+  topping: StoredTopping;
   seat: number | null;
 };
 
 /** 今のダミーデータと同じ3人（席 0・3・5） */
 const dummyMembers: Member[] = [
-  { id: "tanaka", name: "田中 さくら", memo: "10月に中途で入社しました！", topping: "#e27d7a", seat: 0 },
-  { id: "sato", name: "佐藤 健", memo: "そばの気分。営業部です", topping: "#ef9f6e", seat: 3 },
-  { id: "suzuki", name: "鈴木 美咲", memo: "", topping: "#e9b949", seat: 5 },
+  { id: "tanaka", name: "田中 さくら", memo: "10月に中途で入社しました！", topping: "ume", seat: 0 },
+  { id: "sato", name: "佐藤 健", memo: "そばの気分。営業部です", topping: "sake", seat: 3 },
+  { id: "suzuki", name: "鈴木 美咲", memo: "", topping: "tamago", seat: 5 },
 ];
 
 /** 指定した席に人を並べる */
@@ -33,13 +34,13 @@ function membersAt(seats: (number | null)[]): Member[] {
     id: `user${i}`,
     name: `参加者${i}`,
     memo: "",
-    topping: "#e27d7a",
+    topping: "ume",
     seat,
   }));
 }
 
 /** 自分（これから参加する人） */
-const me = { id: "me", name: "吉田 琴乃", memo: "", topping: "#6fae92" };
+const me: Omit<Member, "seat"> = { id: "me", name: "吉田 琴乃", memo: "", topping: "ume" };
 
 describe("assignSeat：参加する人の席を決める", () => {
   test("誰もいなければ 0 番の席", () => {
@@ -81,77 +82,17 @@ describe("assignSeat：参加する人の席を決める", () => {
   });
 });
 
-describe("joinLunch：参加すると、メンバーに自分が加わる", () => {
-  test("ダミーの3人に自分が加わって4人になり、自分は 1 番の席に入る", () => {
-    const result = joinLunch(dummyMembers, me);
-    expect(result).toHaveLength(4);
-    expect(result.find((m) => m.id === "me")).toEqual({ ...me, seat: 1 });
+describe("assignSeat：同じ名前の人・席なしの人", () => {
+  test("同じ名前の人が2人いても、id が違えば別々の席に入る", () => {
+    const first: Member = { id: "tanaka1", name: "田中 さくら", memo: "", topping: "ume", seat: 0 };
+    expect(assignSeat([first], "tanaka2")).toBe(1);
   });
 
-  test("もとのメンバーの席は変わらない", () => {
-    const result = joinLunch(dummyMembers, me);
-    for (const m of dummyMembers) {
-      expect(result.find((r) => r.id === m.id)).toEqual(m);
-    }
-  });
-
-  test("8席すべて埋まっていても、席なしで参加できる", () => {
-    const result = joinLunch(membersAt([0, 1, 2, 3, 4, 5, 6, 7]), me);
-    expect(result).toHaveLength(9);
-    expect(result.find((m) => m.id === "me")?.seat).toBeNull();
-  });
-
-  test("すでに参加している人がもう一度参加しても、メンバーは変わらない", () => {
-    const members = [...dummyMembers, { ...me, seat: 1 }];
-    expect(joinLunch(members, me)).toEqual(members);
-  });
-
-  test("もとの配列は書き換えない", () => {
-    const before = structuredClone(dummyMembers);
-    joinLunch(dummyMembers, me);
-    expect(dummyMembers).toEqual(before);
-  });
-
-  test("同じ名前の人が2人いても、id が違えば両方参加でき、別々の席に入る", () => {
-    const first = { id: "tanaka1", name: "田中 さくら", memo: "", topping: "#e27d7a" };
-    const second = { id: "tanaka2", name: "田中 さくら", memo: "", topping: "#ef9f6e" };
-    const noMembers: Member[] = [];
-    const result = joinLunch(joinLunch(noMembers, first), second);
-    expect(result).toHaveLength(2);
-    expect(result.find((m) => m.id === "tanaka1")?.seat).toBe(0);
-    expect(result.find((m) => m.id === "tanaka2")?.seat).toBe(1);
-  });
-});
-
-describe("席は後から移らない（席なしの人は、席が空いても席なしのまま）", () => {
-  /** 席 0〜7 の8人と、席なしの1人（user8） */
-  const nineMembers = membersAt([0, 1, 2, 3, 4, 5, 6, 7, null]);
-
-  test("席 3 の人がやめても、席なしの人は席なしのまま", () => {
-    const result = leaveLunch(nineMembers, "user3");
-    expect(result.find((m) => m.id === "user8")?.seat).toBeNull();
-  });
-
-  test("その後に新しく参加した人が、空いた席 3 に入る", () => {
-    const result = joinLunch(leaveLunch(nineMembers, "user3"), me);
-    expect(result.find((m) => m.id === "me")?.seat).toBe(3);
-    expect(result.find((m) => m.id === "user8")?.seat).toBeNull();
-  });
-});
-
-describe("leaveLunch：参加をやめると、メンバーから自分が消える", () => {
-  test("4人から自分が消えて3人に戻る", () => {
-    const members = [...dummyMembers, { ...me, seat: 1 }];
-    expect(leaveLunch(members, "me")).toEqual(dummyMembers);
-  });
-
-  test("参加していない人がやめても、メンバーは変わらない", () => {
-    expect(leaveLunch(dummyMembers, "me")).toEqual(dummyMembers);
-  });
-
-  test("ほかの人は消えない", () => {
-    const result = leaveLunch(dummyMembers, "sato");
-    expect(result.map((m) => m.id)).toEqual(["tanaka", "suzuki"]);
+  test("席 3 の人がやめた後に参加した人は、空いた席 3 に入る（席なしの人は移らない）", () => {
+    // 席 0〜7 の8人と席なしの1人（user8）から、席 3 の人（user3）がやめた
+    const members = membersAt([0, 1, 2, 3, 4, 5, 6, 7, null]).filter((m) => m.id !== "user3");
+    expect(assignSeat(members, "me")).toBe(3);
+    expect(members.find((m) => m.id === "user8")?.seat).toBeNull();
   });
 });
 
@@ -222,5 +163,32 @@ describe("arrangeSeats：テーブルの8席に人を並べる", () => {
     const seated = arrangeSeats(members).filter((s) => s.member !== null);
     expect(seated).toHaveLength(8);
     expect(seated.some((s) => s.member?.seat === null)).toBe(false);
+  });
+});
+
+describe("pickTopping：その人の具を決める", () => {
+  test("梅・鮭・卵のどれか", () => {
+    for (const id of ["a", "b", "c", "uid-123", "XyZ9"]) {
+      expect(["ume", "sake", "tamago"]).toContain(pickTopping(id));
+    }
+  });
+
+  test("同じ人なら毎回同じ具", () => {
+    expect(pickTopping("abcDEF123")).toBe(pickTopping("abcDEF123"));
+  });
+
+  test("人によって違う具になる", () => {
+    const toppings = new Set(["a", "b", "c"].map(pickTopping));
+    expect(toppings.size).toBe(3);
+  });
+});
+
+describe("displayTopping：画面に出す具", () => {
+  test("自分は mine（緑）", () => {
+    expect(displayTopping({ topping: "sake" }, true)).toBe("mine");
+  });
+
+  test("ほかの人は保存した具", () => {
+    expect(displayTopping({ topping: "sake" }, false)).toBe("sake");
   });
 });

@@ -1,5 +1,5 @@
 import { memberListName, memoText } from "@/lib/labels";
-import { summarizeTable, type ViewMember } from "@/lib/members";
+import { displayTopping, summarizeTable, type ViewMember } from "@/lib/members";
 import { Onigiri } from "../illustrations";
 import { SpeechBubble } from "../ui/speech-bubble";
 import { Tag } from "../ui/tag";
@@ -26,7 +26,7 @@ function MemberRow({ member }: { member: ViewMember }) {
   return (
     <li className="anim-rise flex items-start gap-2.5 py-2">
       <span className="shrink-0">
-        <Onigiri topping={member.topping} size={30} variant="simple" />
+        <Onigiri topping={displayTopping(member, member.isMe)} size={30} variant="simple" />
       </span>
       <div className="flex min-w-0 flex-1 flex-col gap-[3px]">
         <span className="text-caption font-bold text-brand">

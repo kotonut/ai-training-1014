@@ -1,5 +1,5 @@
 import { seatAriaLabel, seatLabel } from "@/lib/labels";
-import { SEAT_COUNT, arrangeSeats, type ViewMember } from "@/lib/members";
+import { SEAT_COUNT, arrangeSeats, displayTopping, type ViewMember } from "@/lib/members";
 import { Burst, EmptyPlate, Onigiri } from "../illustrations";
 import { Tag } from "../ui/tag";
 
@@ -102,7 +102,7 @@ function SeatedMember({
         style={{ left: x - 32, top: y - 36, animationDelay: member.isMe ? "0s" : `${seat * 0.08}s` }}
       >
         <span className="anim-bob block h-[58px]" style={{ animationDelay: `${seat * 0.3}s` }}>
-          <Onigiri topping={member.topping} />
+          <Onigiri topping={displayTopping(member, member.isMe)} />
         </span>
         <Tag tone={member.isMe ? "solid" : "ink"} size="sm" className="mt-0.5">
           {seatLabel(member.name, member.isMe)}
