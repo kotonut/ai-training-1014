@@ -6,15 +6,15 @@ import type { Topping } from "@/lib/members";
 const COLORS = {
   rice: "#fff", // おにぎりのご飯
   riceEdge: "#e2dbcf", // ご飯の輪郭
-  dark: "#2b3a35", // 海苔と、目・口
+  dark: "#2e2a28", // 海苔と、目・口
   cheek: "#f3afa6", // ほっぺ
   shadow: "rgb(0 0 0 / 0.08)", // おにぎりの足元の影
   plate: "#fff", // お皿
-  plateEdge: "#d3ded8", // お皿の縁とお箸
-  plateInner: "#e5ece8", // お皿の内側の線
-  confetti: ["#e9b949", "#e27d7a", "#6fae92", "#ef9f6e"], // 紙吹雪
-  // おにぎりの具（くすませて強さをそろえる）。自分（mine）は落ち着いた緑
-  topping: { ume: "#e27d7a", sake: "#ef9f6e", tamago: "#e9b949", mine: "#6fae92" },
+  plateEdge: "#e6d3cf", // お皿の縁とお箸
+  plateInner: "#f2e4e1", // お皿の内側の線
+  confetti: ["#e9b949", "#e27d7a", "#6fa27a", "#ef9f6e"], // 紙吹雪
+  // おにぎりの具（くすませて強さをそろえる）。自分（mine）は紫蘇の葉の緑で、赤い画面の中でもすぐ見つかるようにする
+  topping: { ume: "#e27d7a", sake: "#ef9f6e", tamago: "#e9b949", mine: "#6fa27a" },
 } as const;
 
 type OnigiriProps = {

@@ -1,21 +1,21 @@
 @import "tailwindcss";
 
-/* SPEC.md 5.6「見た目」の色と書体 */
+/* SPEC.md 5.6「見た目」の色と書体（梅干しと白ごはん） */
 @theme {
-  --color-ground: #f1f6f2; /* 背景（薄いミント） */
-  --color-ink: #1c2b26; /* 本文の文字 */
-  --color-brand: #2f5d50; /* 参加ボタンなど（画面でいちばん濃い色） */
-  --color-brand-deep: #1f3d35; /* テーブルの時刻 */
-  --color-table: #c9dfd1; /* テーブル */
-  --color-table-edge: #9fc2ae; /* テーブルの厚み */
-  --color-muted: #3f504a; /* 補足の文字 */
-  --color-subtle: #5e6e68; /* さらに控えめな文字 */
-  --color-line: #dde7e1; /* 区切り線 */
-  --color-field: #b7c4bf; /* 入力欄の枠 */
-  --color-leave: #8a9b95; /* 「参加をやめる」の枠 */
+  --color-ground: #fbf0ee; /* 背景（梅の花のごく淡い色） */
+  --color-ink: #2e2a28; /* 本文の文字（海苔と醤油の間） */
+  --color-brand: #b5394a; /* 参加ボタンなど（梅干し。画面でいちばん目立つ色） */
+  --color-brand-deep: #8e2b3a; /* テーブルの時刻 */
+  --color-table: #fff; /* テーブル（白い大皿） */
+  --color-table-edge: #ebcfcb; /* テーブルの厚み */
+  --color-muted: #5a4f4c; /* 補足の文字 */
+  --color-subtle: #73635f; /* さらに控えめな文字 */
+  --color-line: #f0dcd8; /* 区切り線 */
+  --color-field: #cdb5b0; /* 入力欄の枠 */
+  --color-leave: #a08f8b; /* 「参加をやめる」の枠 */
   --color-surface: #fff; /* 札・吹き出し・下のボタンの部分・下から出てくる画面 */
   --color-on-brand: #fff; /* brand の上に載せる文字 */
-  --color-overlay: rgb(15 25 22 / 0.45); /* 下から出てくる画面の後ろを暗くする */
+  --color-overlay: rgb(40 22 20 / 0.45); /* 下から出てくる画面の後ろを暗くする */
   /* おにぎり・お皿・紙吹雪の色は app/_components/illustrations.tsx の中にある */
 
   /* 角丸（丸い札やボタンは rounded-full） */
@@ -36,8 +36,8 @@
   --shadow-join: 0 6px 16px color-mix(in srgb, var(--color-brand) 28%, transparent); /* 参加ボタン */
   --shadow-bubble: 0 1px 0 var(--color-line); /* 吹き出しの下 */
 
-  --font-sans: var(--font-zen-kaku), system-ui, sans-serif;
-  --font-display: var(--font-kiwi-maru), serif;
+  --font-sans: var(--font-biz-udp-gothic), system-ui, sans-serif;
+  --font-display: var(--font-yusei-magic), sans-serif;
 }
 
 /* SPEC.md 5.7「動き」 */

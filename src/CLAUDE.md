@@ -101,6 +101,6 @@ App Router のガイドは `node_modules/next/dist/docs/01-app/` にある。
   - 文字の大きさは5段階（`text-caption`・`text-body`・`text-heading`・`text-title`・`text-display`）。段階を増やさず、この中から選ぶ。
   - おにぎり・お皿・紙吹雪など絵の色は、`globals.css` ではなく `app/_components/illustrations.tsx` の `COLORS` にまとめる。
   - 社内の人専用の画面も、ランチの画面と同じトークン（`ground`・`ink`・`muted` など）を使う。
-- 書体は2つ。`font-display`（Kiwi Maru）は見出し・数字・参加ボタンなど画面の顔になる部分だけ、それ以外は `font-sans`（Zen Kaku Gothic New）。どちらも `next/font/google` で読み込む。
+- 書体は2つ。`font-display`（Yusei Magic）は見出し・数字・参加ボタンなど画面の顔になる部分だけ、それ以外は `font-sans`（BIZ UDPGothic）。Yusei Magic は太さ 400 だけ、BIZ UDPGothic は 400 と 700 だけなので、`font-medium`（500）は 400 で表示される。どちらも `next/font/google` で読み込む。
 - 動きは `globals.css` の `anim-*` クラスで付ける。新しい動きを足すときは、`prefers-reduced-motion` の一覧にも加えて止まるようにする。
 - ダークモードはない（明るい画面だけ）。

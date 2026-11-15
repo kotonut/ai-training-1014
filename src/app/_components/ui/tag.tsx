@@ -1,7 +1,7 @@
 // 丸い札（日付・集合場所・名札・人数）
 
 type TagProps = {
-  /** brand：白地に緑の文字 / ink：白地に黒の文字 / solid：緑地に白の文字 */
+  /** brand：白地に梅色の文字 / ink：白地に黒の文字 / solid：梅色の地に白の文字 */
   tone?: "brand" | "ink" | "solid";
   /** sm：おにぎりの下の名札など、幅の狭いところ用 */
   size?: "sm" | "md";
