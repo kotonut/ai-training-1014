@@ -17,7 +17,7 @@ export function splitCharacters(text: string): string[] {
  * 改行が続いているとき（\n\n、\r\n\r\n など）も、まとめて空白1つにする。
  * 記号や HTML のような文字列は書き換えない（画面に出すときに React がエスケープする）。
  */
-function normalize(text: string): string {
+export function normalize(text: string): string {
   return text.trim().replace(/[\r\n]+/g, " ");
 }
 

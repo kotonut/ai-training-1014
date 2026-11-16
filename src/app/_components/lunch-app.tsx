@@ -20,6 +20,7 @@ import {
 } from "@/lib/lunch-store";
 import { findMember, markMe, summarizeTable, type LunchMember, type ViewMember } from "@/lib/members";
 import { validateMemo, validateName } from "@/lib/text-input";
+import { getTodayMessage } from "@/lib/today";
 import { useSignedInUser } from "./auth-gate";
 import { HandIcon } from "./illustrations";
 import { LunchTable } from "./lunch/lunch-table";
@@ -41,6 +42,9 @@ type Sheet =
   | null;
 
 const MEMO_PLACEHOLDER = "例：4月入社です／中華の気分";
+
+/** 今日の一言（data/today.json）。ビルドのときに組み込まれるので、一度だけ読む */
+const TODAY_MESSAGE = getTodayMessage();
 
 /** 日付が変わったか確かめる間隔 */
 const DATE_CHECK_INTERVAL_MS = 60_000;
@@ -212,7 +216,7 @@ export function LunchApp() {
 
   return (
     <div className="relative mx-auto flex h-dvh w-full max-w-[430px] flex-col overflow-hidden bg-ground">
-      <TodayHeader dateKey={dateKey} count={total} joined={joined} />
+      <TodayHeader dateKey={dateKey} count={total} joined={joined} message={TODAY_MESSAGE} />
       <LunchTable members={members} meeting={MEETING} onSelect={selectMember} />
       <MemberList members={members} />
 
