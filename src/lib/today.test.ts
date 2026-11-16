@@ -1,11 +1,19 @@
 import { describe, expect, test } from "vitest";
-import { getTodayMessage, TODAY_MESSAGE_MAX_LENGTH } from "@/lib/today";
+import today from "@/data/today.json";
+import {
+  getTodayMessage,
+  TODAY_MESSAGE_MAX_LENGTH,
+  todayMessageErrorText,
+  validateTodayMessage,
+} from "@/lib/today";
 
 // SPEC.md 5.1「今日の一言」・6.4・8.12
 
 describe("getTodayMessage：今日の一言を取り出す", () => {
+  // 一言は MCP の道具（set_today_message）でいつでも変わるので、中身の文字列には頼らない
   test("引数がなければ data/today.json の一言を返す", () => {
-    expect(getTodayMessage()).toBe("今日もいい一日を！");
+    expect(getTodayMessage()).toBe(getTodayMessage(today));
+    expect(getTodayMessage()).not.toBeNull();
   });
 
   test("ふつうの一言はそのまま返す", () => {
@@ -39,7 +47,7 @@ describe("getTodayMessage：出すものがないときは null", () => {
   test("中身がオブジェクトでないとき", () => {
     expect(getTodayMessage(null)).toBeNull();
     expect(getTodayMessage("今日もいい一日を！")).toBeNull();
-    expect(getTodayMessage(undefined)).toBe("今日もいい一日を！"); // 省略と同じ
+    expect(getTodayMessage(undefined)).toBe(getTodayMessage()); // 省略と同じ
   });
 });
 
@@ -79,5 +87,46 @@ describe("getTodayMessage：40文字まで", () => {
 
   test("切った先が空白で終わるときは、空白を残さない", () => {
     expect(getTodayMessage({ text: `${"あ".repeat(39)} いい一日を` })).toBe(`${"あ".repeat(39)}…`);
+  });
+});
+
+describe("validateTodayMessage：保存する一言を確かめる", () => {
+  test("ふつうの一言は通る", () => {
+    expect(validateTodayMessage("寒いので鍋の気分")).toEqual({ ok: true, value: "寒いので鍋の気分" });
+  });
+
+  test("空や空白だけは empty", () => {
+    expect(validateTodayMessage("")).toEqual({ ok: false, reason: "empty" });
+    expect(validateTodayMessage(" 　\n\t")).toEqual({ ok: false, reason: "empty" });
+  });
+
+  test("40文字ちょうどは通る", () => {
+    const text = "あ".repeat(40);
+    expect(validateTodayMessage(text)).toEqual({ ok: true, value: text });
+  });
+
+  test("41文字は tooLong（勝手に切らない）", () => {
+    expect(validateTodayMessage("あ".repeat(41))).toEqual({ ok: false, reason: "tooLong" });
+  });
+
+  test("前後の空白を取り、途中の改行を空白1つにしてから数える", () => {
+    expect(validateTodayMessage(`  ${"あ".repeat(20)}\r\n\r\n${"い".repeat(19)}  `)).toEqual({
+      ok: true,
+      value: `${"あ".repeat(20)} ${"い".repeat(19)}`,
+    });
+  });
+
+  test("絵文字は見た目の1文字を1文字と数える", () => {
+    expect(validateTodayMessage(`${"あ".repeat(39)}👨‍👩‍👧`).ok).toBe(true);
+  });
+});
+
+describe("todayMessageErrorText：保存できなかった理由の文", () => {
+  test("空のとき", () => {
+    expect(todayMessageErrorText("empty")).toBe("一言が空です。1〜40文字で書いてください");
+  });
+
+  test("長すぎるとき", () => {
+    expect(todayMessageErrorText("tooLong")).toBe("一言は40文字までにしてください");
   });
 });

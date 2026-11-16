@@ -90,6 +90,8 @@ App Router のガイドは `node_modules/next/dist/docs/01-app/` にある。
 - `lib/lunch-store.ts` — Firestore の読み書き（参加者の待ち受け・参加・参加をやめる・ひとこと・保存した名前）。Firebase を使うコードは `lib/` のこれらのファイルにだけ置く。
 - `lib/lunch-docs.ts` — Firestore から読んだ文書を画面で使う形にする（Firebase には触らない）。
 - `lib/today.ts`・`data/today.json` — 今日の一言（`SPEC.md` 6.4）。一言は `data/today.json` に `{ "text": "…" }` で置き、`getTodayMessage` で画面に出す文字列にする（空なら `null`、40文字を超えたら切って「…」）。JSON はビルドのときに組み込まれる。
+- `lib/today-file.ts` — 今日の一言を `data/today.json` に保存する（`setTodayMessage`。空・41文字以上はエラー）。`node:fs` を使うので画面からは読み込まない。`lib/today.ts` も画面から読み込まれるので、ファイルを扱うコードは置かない。
+- `mcp/server.ts` — 今日の一言を変える MCP サーバー（stdio、名前は `hitokoto`、道具は `set_today_message`）。`.mcp.json` に登録してあり、`npx tsx mcp/server.ts` で起動する。標準出力はやりとりに使うので、ログは `console.error` だけに出す。どこから起動しても動くように、ここから読み込むファイル（`lib/today.ts`・`lib/today-file.ts`）では `@/` ではなく相対パスを使う。
 - `firestore.rules` — Firestore のセキュリティルール。守りの本体。会社のドメインは `companyDomain()` に直接書く。
 - 参加者の型は `lib/members.ts` の `LunchMember`。おにぎりの具は色ではなく名前（`ume`・`sake`・`tamago`）で保存し、色は `illustrations.tsx` の `COLORS.topping` で決める。
 - `_` で始まるフォルダはルートにならない（App Router の private folder）。
