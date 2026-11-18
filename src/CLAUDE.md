@@ -78,7 +78,7 @@ App Router のガイドは `node_modules/next/dist/docs/01-app/` にある。
 - `app/globals.css` — Tailwind の読み込み、`@theme` の色と書体のトークン、アニメーション（`anim-*` クラス）。
 - `app/_components/auth-gate.tsx` — ログインの関所（Client Component）。会社のアカウントでログインしたときだけ中身を出し、それ以外は 5.5 の画面を出す。ログインしている人は `useSignedInUser()` で取り出す。
 - `app/_components/lunch-app.tsx` — トップ画面の本体（Client Component）。Firestore の参加者を待ち受け、参加・参加をやめる・ひとことを `lib/lunch-store.ts` で保存する。下から出てくる画面の移り変わりを `useState` で持ち、下の部品を並べる。
-- `app/_components/lunch/` — トップ画面だけで使う部品。`today-header.tsx`（日付の札と見出し）、`lunch-table.tsx`（テーブル・集合時刻と場所・席）、`member-list.tsx`（今日のメンバー）。
+- `app/_components/lunch/` — トップ画面だけで使う部品。`today-header.tsx`（日付の札と見出しと今日の一言）、`lunch-table.tsx`（テーブル・集合時刻と場所・席）、`member-list.tsx`（今日のメンバー）。
 - `app/_components/ui/` — どの画面でも使える部品。`Tag`（丸い札）、`Button`（`cta`・`primary`・`secondary`・`subtle`・`link`）、`BottomSheet`、`TextField`、`SpeechBubble`、`ActionBar`（下に固定するボタンの部分）、`IconBadge`。画面に札やボタンを直接書かず、これらを使う。
 - `app/_components/illustrations.tsx` — おにぎり、空席のお皿、紙吹雪、アイコンの SVG と、絵の色（`COLORS`）。
 - `app/_components/locked-screen.tsx` — 社内の人専用の画面の共通部分（ログインの画面、`/blocked`、`/expired`）。
@@ -89,6 +89,9 @@ App Router のガイドは `node_modules/next/dist/docs/01-app/` にある。
 - `lib/auth.ts` — Google ログイン（ポップアップ方式）。
 - `lib/lunch-store.ts` — Firestore の読み書き（参加者の待ち受け・参加・参加をやめる・ひとこと・保存した名前）。Firebase を使うコードは `lib/` のこれらのファイルにだけ置く。
 - `lib/lunch-docs.ts` — Firestore から読んだ文書を画面で使う形にする（Firebase には触らない）。
+- `lib/today.ts`・`data/today.json` — 今日の一言（`SPEC.md` 6.4）。一言は `data/today.json` に `{ "text": "…" }` で置き、`getTodayMessage` で画面に出す文字列にする（空なら `null`、40文字を超えたら切って「…」）。JSON はビルドのときに組み込まれる。
+- `lib/today-file.ts` — 今日の一言を `data/today.json` に保存する（`setTodayMessage`。空・41文字以上はエラー）。`node:fs` を使うので画面からは読み込まない。`lib/today.ts` も画面から読み込まれるので、ファイルを扱うコードは置かない。
+- `mcp/server.ts` — 今日の一言を変える MCP サーバー（stdio、名前は `hitokoto`、道具は `set_today_message`）。`.mcp.json` に登録してあり、`npx tsx mcp/server.ts` で起動する。標準出力はやりとりに使うので、ログは `console.error` だけに出す。どこから起動しても動くように、ここから読み込むファイル（`lib/today.ts`・`lib/today-file.ts`）では `@/` ではなく相対パスを使う。
 - `firestore.rules` — Firestore のセキュリティルール。守りの本体。会社のドメインは `companyDomain()` に直接書く。
 - 参加者の型は `lib/members.ts` の `LunchMember`。おにぎりの具は色ではなく名前（`ume`・`sake`・`tamago`）で保存し、色は `illustrations.tsx` の `COLORS.topping` で決める。
 - `_` で始まるフォルダはルートにならない（App Router の private folder）。
