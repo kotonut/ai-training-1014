@@ -12,7 +12,23 @@ export type AuthScreen =
   | "checking" // ログインしているか確かめている途中
   | "signedOut" // ログインしていない
   | "otherAccount" // 会社以外のアカウント（またはメールが確認されていない）
+  | "inAppBrowser" // アプリの中のブラウザ（LINE・Slack など）で開いた
   | "lunch"; // 今日のランチ
+
+// アプリの中のブラウザが User-Agent に入れる目印（SPEC.md 5.5）。
+// Google はアプリの中のブラウザでのログインを止めているので、Safari や Chrome で開き直してもらう。
+const IN_APP_BROWSER_MARKS: readonly RegExp[] = [
+  /\bLine\//, // LINE（「Line/14.x」。大文字・小文字を区別して、ほかの言葉に当たらないようにする）
+  /\bSlack(?:_SSB)?\//, // Slack（「Slack/24.x」「Slack_SSB/4.x」）
+  /\bInstagram\b/, // Instagram
+  /\b(?:FBAN|FBAV|FBIOS|FB_IAB|FB4A)\b/, // Facebook・Messenger
+];
+
+/** User-Agent から、アプリの中のブラウザかどうかを判定する */
+export function isInAppBrowser(userAgent: string | null | undefined): boolean {
+  if (!userAgent) return false;
+  return IN_APP_BROWSER_MARKS.some((mark) => mark.test(userAgent));
+}
 
 /**
  * 会社のドメインの書き方をそろえる（前後の空白・先頭の「@」を取り、小文字にする）。
@@ -49,14 +65,18 @@ export function isCompanyAccount(account: AccountInfo, companyDomain: string): b
 /**
  * 開いたときに出す画面を決める（SPEC.md 6.1 の表）。
  * account が undefined のときは、まだ確かめている途中。null はログインしていない。
+ * アプリの中のブラウザでは Google のログインができないので、ログインのボタンの代わりに
+ * 「Safari や Chrome で開いてください」を出す。すでに会社のアカウントでログインしていれば、そのまま使える。
  */
 export function decideAuthScreen(
   account: AccountInfo | null | undefined,
   companyDomain: string,
+  userAgent?: string | null,
 ): AuthScreen {
   if (account === undefined) return "checking";
-  if (account === null) return "signedOut";
-  return isCompanyAccount(account, companyDomain) ? "lunch" : "otherAccount";
+  if (account !== null && isCompanyAccount(account, companyDomain)) return "lunch";
+  if (isInAppBrowser(userAgent)) return "inAppBrowser";
+  return account === null ? "signedOut" : "otherAccount";
 }
 
 /**
