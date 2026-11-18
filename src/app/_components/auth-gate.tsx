@@ -1,8 +1,9 @@
 "use client";
 
-import { createContext, use, useEffect, useState } from "react";
+import { createContext, use, useEffect, useState, useSyncExternalStore } from "react";
 import { decideAuthScreen, getCompanyDomain, signInErrorMessage } from "@/lib/account";
 import { signInWithGoogle, watchSignedInUser, type SignedInUser } from "@/lib/auth";
+import { copyText } from "@/lib/clipboard";
 import { findSetupProblem } from "@/lib/setup";
 import { LockedScreen } from "./locked-screen";
 import { Button } from "./ui/button";
@@ -22,10 +23,16 @@ export function useSignedInUser(): SignedInUser {
 // 設定（.env.local）に足りないものがあるか。値はビルドのときに決まるので、1回だけ確かめる
 const SETUP_PROBLEM = findSetupProblem();
 
+// User-Agent は変わらないので、待ち受けは何もしない。サーバーで描くときは null（わからない）
+const subscribeNothing = () => () => {};
+const readUserAgent = () => navigator.userAgent;
+const noUserAgentOnServer = () => null;
+
 export function AuthGate({ children }: { children: React.ReactNode }) {
   // undefined：確かめている途中、null：ログインしていない
   const [user, setUser] = useState<SignedInUser | null | undefined>(undefined);
   const [error, setError] = useState<string | null>(null);
+  const userAgent = useSyncExternalStore(subscribeNothing, readUserAgent, noUserAgentOnServer);
 
   useEffect(() => {
     if (SETUP_PROBLEM) {
@@ -53,7 +60,7 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
     );
   }
 
-  const screen = user === undefined ? "checking" : decideAuthScreen(user, getCompanyDomain());
+  const screen = decideAuthScreen(user, getCompanyDomain(), userAgent);
 
   if (screen === "lunch" && user) {
     return <SignedInUserContext value={user}>{children}</SignedInUserContext>;
@@ -69,6 +76,18 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
       {error}
     </p>
   );
+
+  if (screen === "inAppBrowser") {
+    // Google はアプリの中のブラウザでのログインを止めているので、ログインのボタンは出さない
+    return (
+      <LockedScreen
+        title={"このままでは\nログインできません"}
+        message="Safari や Chrome で開いてください。下のボタンで URL をコピーして、Safari や Chrome のアドレス欄に貼り付けると開けます。"
+      >
+        <CopyUrlButton />
+      </LockedScreen>
+    );
+  }
 
   if (screen === "otherAccount") {
     return (
@@ -96,3 +115,30 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
     </LockedScreen>
   );
 }
+
+// 今のページの URL をコピーするボタン（SPEC.md 5.5）。
+// コピーできなかったときのために、URL も文字で出しておく（長押しで選べる）。
+function CopyUrlButton() {
+  const [result, setResult] = useState<"copied" | "failed" | null>(null);
+  const url = useSyncExternalStore(subscribeNothing, readPageUrl, noPageUrlOnServer);
+
+  const copy = () => {
+    void copyText(window.location.href).then((ok) => setResult(ok ? "copied" : "failed"));
+  };
+
+  return (
+    <>
+      <Button variant="primary" onClick={copy} className="w-full">
+        URL をコピー
+      </Button>
+      <p role="status" className="text-caption leading-relaxed text-muted">
+        {result === "copied" && "コピーしました。Safari や Chrome に貼り付けて開いてください"}
+        {result === "failed" && "コピーできませんでした。下の URL を長押しして選んでください"}
+      </p>
+      {url && <p className="text-caption break-all text-muted select-all">{url}</p>}
+    </>
+  );
+}
+
+const readPageUrl = () => window.location.href;
+const noPageUrlOnServer = () => null;
