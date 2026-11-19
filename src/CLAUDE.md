@@ -43,6 +43,7 @@ npx tsc --noEmit # 型チェック（専用スクリプトはない）
 npm run test:run # テストを1回だけ実行（Claude はこちらを使う）
 npm run test     # テストを監視モードで実行（人が使う。終わらないので Claude は使わない）
 npx vitest run lib/date.test.ts # 1つのファイルだけ実行
+npx tsx scripts/make-qr.ts <アプリの URL> # デスクに置く QR コード（印刷用の SVG）を qr/lunch-qr.svg に書き出す
 ```
 
 ### テスト
@@ -93,6 +94,7 @@ App Router のガイドは `node_modules/next/dist/docs/01-app/` にある。
 - `lib/today.ts`・`data/today.json` — 今日の一言（`SPEC.md` 6.4）。一言は `data/today.json` に `{ "text": "…" }` で置き、`getTodayMessage` で画面に出す文字列にする（空なら `null`、40文字を超えたら切って「…」）。JSON はビルドのときに組み込まれる。
 - `lib/today-file.ts` — 今日の一言を `data/today.json` に保存する（`setTodayMessage`。空・41文字以上はエラー）。`node:fs` を使うので画面からは読み込まない。`lib/today.ts` も画面から読み込まれるので、ファイルを扱うコードは置かない。
 - `mcp/server.ts` — 今日の一言を変える MCP サーバー（stdio、名前は `hitokoto`、道具は `set_today_message`）。`.mcp.json` に登録してあり、`npx tsx mcp/server.ts` で起動する。標準出力はやりとりに使うので、ログは `console.error` だけに出す。どこから起動しても動くように、ここから読み込むファイル（`lib/today.ts`・`lib/today-file.ts`）では `@/` ではなく相対パスを使う。
+- `scripts/make-qr.ts` — デスクに置く QR コードを作るスクリプト（イシュー #7）。渡した URL をそのまま（合言葉などを付けずに、`SPEC.md` 6.1）印刷用の SVG にして `qr/lunch-qr.svg` に書き出す。URL を渡さないとき・http(s) でないときは使い方を出して止まり、ファイルは作らない。`qrcode` は devDependencies に入れてあり、画面には組み込まない。
 - `firestore.rules` — Firestore のセキュリティルール。守りの本体。会社のドメインは `companyDomain()` に直接書く。
 - 参加者の型は `lib/members.ts` の `LunchMember`。おにぎりの具は色ではなく名前（`ume`・`sake`・`tamago`）で保存し、色は `illustrations.tsx` の `COLORS.topping` で決める。
 - `_` で始まるフォルダはルートにならない（App Router の private folder）。
